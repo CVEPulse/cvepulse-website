@@ -838,30 +838,7 @@ const CVEPulseWebsite = () => {
               The Hacker News, Reddit, Twitter, and CISA advisories. Our trending algorithm prioritizes media 
               coverage, CISA KEV status, severity, GitHub PoCs, and social engagement.
             </p>
-            <div className="bg-slate-900/50 rounded p-3 mb-3">
-              <div className="text-red-400 font-semibold text-sm mb-2">🔴 Zero-Day & Emergency Detection Criteria</div>
-              <div className="text-slate-300 text-xs space-y-2">
-                <div>
-                  <p className="font-semibold text-orange-300 mb-1">Zero-Day (ALL 5 must apply):</p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-2">
-                    <li>No official patch available (≤2 days old)</li>
-                    <li>Newly disclosed (≤3 days old)</li>
-                    <li>Actively exploited OR credible exploit exists (KEV or PoCs)</li>
-                    <li>No known effective mitigation</li>
-                    <li>Vendor unaware or fix not released (rapid media attention)</li>
-                  </ul>
-                </div>
-                <div>
-                  <p className="font-semibold text-red-300 mb-1">🚨 Zero-Day EMERGENCY (Zero-Day + exposure):</p>
-                  <p className="ml-2">All Zero-Day criteria met + affects internet-facing/business-critical systems (CRITICAL + KEV + media coverage)</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-orange-300 mb-1">🔥 Emergency (Threat + 3+ Severity indicators):</p>
-                  <p className="ml-2"><strong>Step 1 - Real Threat (≥1):</strong> Actively exploited, CISA KEV, or CVSS ≥8.5</p>
-                  <p className="ml-2"><strong>Step 2 - Severity (≥3):</strong> RCE/PrivEsc, Critical systems, No patch (≤7 days), CVSS ≥9.0, High business impact</p>
-                </div>
-              </div>
-            </div>
+
             <p className="text-slate-500 text-xs">
               CVEPulse.com - Smarter than CVETrends by tracking curated security journalism. Real media mentions = real threats.
             </p>
