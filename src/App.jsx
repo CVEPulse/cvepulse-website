@@ -22,7 +22,7 @@ const CVEPulseWebsite = () => {
   const navigation = [
     { name: 'Home', id: 'home' },
     { name: 'Services', id: 'services' },
-    { name: 'CVE Intelligence', id: 'cve-dashboard' },
+    { name: 'CVE Intelligence', id: 'cve-dashboard', href: '/dashboard.html' },
     { name: 'Threat Intelligence', id: 'threat-dashboard' },
     { name: 'About', id: 'about' },
     { name: 'Contact', id: 'contact' },
@@ -718,13 +718,13 @@ const CVEPulseWebsite = () => {
             Comprehensive vulnerability management, threat intelligence, and SOC services powered by real-time intelligence
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button 
-              onClick={() => setCurrentPage('cve-dashboard')}
+            <a 
+              href="/dashboard.html"
               className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
             >
               <TrendingUp className="w-5 h-5" />
               <span>View Live CVE Dashboard</span>
-            </button>
+            </a>
             <button 
               onClick={() => setShowPricing(true)}
               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
@@ -1240,17 +1240,27 @@ const CVEPulseWebsite = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             {navigation.filter(item => !['privacy', 'terms'].includes(item.id)).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentPage === item.id
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                {item.name}
-              </button>
+              item.href ? (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-slate-300 hover:bg-slate-700 hover:text-white"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentPage(item.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentPage === item.id
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              )
             ))}
             {/* Pricing Button */}
             <button
@@ -1275,20 +1285,30 @@ const CVEPulseWebsite = () => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-2">
             {navigation.filter(item => !['privacy', 'terms'].includes(item.id)).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentPage(item.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`w-full text-left px-4 py-2 rounded-lg font-medium transition-colors ${
-                  currentPage === item.id
-                    ? 'bg-cyan-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                {item.name}
-              </button>
+              item.href ? (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="block w-full text-left px-4 py-2 rounded-lg font-medium text-slate-300 hover:bg-slate-700 hover:text-white"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentPage(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentPage === item.id
+                      ? 'bg-cyan-600 text-white'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                </button>
+              )
             ))}
             <button
               onClick={() => {
