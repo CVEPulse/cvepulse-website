@@ -1,23 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, TrendingUp, Search, Mail, Phone, MapPin, CheckCircle, ArrowRight, Menu, X, AlertTriangle, Globe, Lock, Zap, Users, Award, ExternalLink, Target, Activity, Github, AlertCircle, Newspaper, Radio, RefreshCw, Bell, Eye, DollarSign } from 'lucide-react';
-import ProfessionalSecurityDashboard from './ProfessionalSecurityDashboard';
-
-// Phase 3 Components
-import PricingModal from './components/PricingModal';
-import AlertsModal from './components/AlertsModal';
-import WatchlistManager from './components/WatchlistManager';
+import { Shield, TrendingUp, Search, Mail, Phone, MapPin, CheckCircle, ArrowRight, Menu, X, AlertTriangle, Globe, Lock, Zap, Users, Award, ExternalLink, Target, Activity, Github, AlertCircle, Newspaper, Radio, RefreshCw } from 'lucide-react';
+import EnhancedCVEDashboard from './EnhancedCVEDashboard';
 
 const CVEPulseWebsite = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // Phase 3 State
-  const [showPricing, setShowPricing] = useState(false);
-  const [showAlerts, setShowAlerts] = useState(false);
-  const [showWatchlist, setShowWatchlist] = useState(false);
-  const [watchlist, setWatchlist] = useState(
-    JSON.parse(localStorage.getItem('cvepulse_watchlist') || '[]')
-  );
 
   const navigation = [
     { name: 'Home', id: 'home' },
@@ -195,9 +182,9 @@ const CVEPulseWebsite = () => {
   ];
 
   // CVE Dashboard Component
-  // CVE Dashboard Component - PROFESSIONAL SECURITY ANALYST DASHBOARD
+  // CVE Dashboard Component - NOW WITH REAL DATA!
   const CVEDashboard = () => {
-    return <ProfessionalSecurityDashboard />;
+    return <EnhancedCVEDashboard />;
   };
 
   const ThreatDashboard = () => {
@@ -526,92 +513,189 @@ const CVEPulseWebsite = () => {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Filters */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-4 mb-6 border border-slate-700">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex-1 min-w-[200px]">
-                <div className="relative">
-                  <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search threats, actors, campaigns..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
-                  />
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center space-x-4">
+                <Activity className="w-5 h-5 text-purple-400" />
+                <div>
+                  <div className="text-sm text-slate-300">
+                    Last Updated: <span className="font-semibold text-purple-400">{formatTimeAgo(lastUpdated)}</span>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {autoRefreshEnabled ? (
+                      <>Next refresh in {formatCountdown(nextRefreshIn)}</>
+                    ) : (
+                      <>Auto-refresh paused (tab inactive)</>
+                    )}
+                  </div>
                 </div>
               </div>
-              <select
-                value={sectorFilter}
-                onChange={(e) => setSectorFilter(e.target.value)}
-                className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-              >
-                {sectors.map(sector => (
-                  <option key={sector} value={sector}>
-                    {sector === 'all' ? 'All Sectors' : sector.charAt(0).toUpperCase() + sector.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={threatTypeFilter}
-                onChange={(e) => setThreatTypeFilter(e.target.value)}
-                className="px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-              >
-                {threatTypes.map(type => (
-                  <option key={type} value={type}>
-                    {type === 'all' ? 'All Types' : type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                  </option>
-                ))}
-              </select>
-              <div className="flex items-center space-x-2 text-sm text-slate-400">
-                <span>Updated: {formatTimeAgo(lastUpdated)}</span>
-                <span>•</span>
-                <span>Next: {formatCountdown(nextRefreshIn)}</span>
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={handleManualRefresh}
-                  className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                  title="Refresh now"
+                  disabled={loading}
+                  className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-600 text-white rounded-lg font-medium transition-colors"
                 >
                   <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span>{loading ? 'Refreshing...' : 'Refresh Now'}</span>
+                </button>
+                <button
+                  onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    autoRefreshEnabled 
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-slate-600 hover:bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  Auto-refresh: {autoRefreshEnabled ? 'ON' : 'OFF'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Threats Grid */}
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-4" />
-                <p className="text-slate-400">Loading threat intelligence...</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4">
+              <div className="text-slate-400 text-sm mb-1">Total Threats</div>
+              <div className="text-2xl font-bold text-white">{threats.length}</div>
+            </div>
+            <div className="bg-red-900/20 backdrop-blur-sm border border-red-800/30 rounded-lg p-4">
+              <div className="text-red-300 text-sm mb-1">Critical</div>
+              <div className="text-2xl font-bold text-red-400">{criticalCount}</div>
+            </div>
+            <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-800/30 rounded-lg p-4">
+              <div className="text-purple-300 text-sm mb-1">APT Activity</div>
+              <div className="text-2xl font-bold text-purple-400">{aptCount}</div>
+            </div>
+            <div className="bg-pink-900/20 backdrop-blur-sm border border-pink-800/30 rounded-lg p-4">
+              <div className="text-pink-300 text-sm mb-1">Dark Web</div>
+              <div className="text-2xl font-bold text-pink-400">{totalDarkWebMentions}</div>
+            </div>
+            <div className="bg-cyan-900/20 backdrop-blur-sm border border-cyan-800/30 rounded-lg p-4">
+              <div className="text-cyan-300 text-sm mb-1">IoCs</div>
+              <div className="text-2xl font-bold text-cyan-400">{totalIOCs}</div>
+            </div>
+          </div>
+
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-6 mb-6">
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search threats, actors, campaigns..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 text-sm">Sector:</span>
+                  {sectors.map(sector => (
+                    <button
+                      key={sector}
+                      onClick={() => setSectorFilter(sector)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        sectorFilter === sector ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      {sector.charAt(0).toUpperCase() + sector.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 text-sm">Type:</span>
+                  {threatTypes.map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setThreatTypeFilter(type)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        threatTypeFilter === type ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      {type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {topThreats.map((threat) => (
-                <div
-                  key={threat.id}
-                  className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-6 border border-slate-700 hover:border-purple-500/50 transition-all"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-xl font-bold text-white">{threat.name}</h3>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold border ${getThreatTypeColor(threat.type)}`}>
-                          {threat.type.toUpperCase()}
-                        </span>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getSeverityColor(threat.severity)}`}>
+          </div>
+
+          {!loading && topThreats.length > 0 && (
+            <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 backdrop-blur-sm border border-purple-700/50 rounded-lg p-6 mb-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <AlertTriangle className="w-6 h-6 text-purple-400" />
+                <h2 className="text-2xl font-bold text-white">Top Active Threats</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {topThreats.map((threat, idx) => (
+                  <div key={threat.id} className="bg-slate-800/70 rounded-lg p-4 border border-slate-600 hover:border-purple-500 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-purple-400 font-bold text-sm">#{idx + 1}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${getThreatTypeColor(threat.type)}`}>
+                            {threat.type.toUpperCase()}
+                          </span>
+                        </div>
+                        <h3 className="text-white font-semibold text-sm mb-1">{threat.name}</h3>
+                        <p className="text-slate-400 text-xs">{threat.threatActor}</p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-purple-400 font-bold text-xl">{threat.riskScore}</span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${getSeverityColor(threat.severity)} mt-1`}>
                           {threat.severity}
                         </span>
                       </div>
-                      <p className="text-slate-400 text-sm">{threat.description}</p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-purple-400">{threat.riskScore}</div>
-                      <div className="text-xs text-slate-500">Risk Score</div>
+                    <div className="flex items-center space-x-4 text-xs text-slate-400 mt-2">
+                      <span>🎯 {threat.affectedOrgs} orgs</span>
+                      <span>🕸️ {threat.darkWebMentions} mentions</span>
+                      <span>📊 {threat.confidence}% confidence</span>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mb-4"></div>
+              <p className="text-slate-400">Loading threat intelligence...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredThreats.map((threat, idx) => (
+                <div key={threat.id} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-6 hover:border-purple-500/50 transition-all">
+                  <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+                    <div className="flex items-center space-x-3 flex-wrap gap-2">
+                      <AlertTriangle className="w-5 h-5 text-purple-400" />
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{threat.name}</h3>
+                        <p className="text-purple-300 text-sm">{threat.threatActor}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-bold border ${getThreatTypeColor(threat.type)}`}>
+                        {threat.type.toUpperCase()}
+                      </span>
+                      {idx < 8 && (
+                        <span className="px-2 py-1 bg-purple-600/30 text-purple-300 text-xs font-bold rounded">
+                          TOP {idx + 1}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-purple-400 font-bold text-2xl">{threat.riskScore}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getSeverityColor(threat.severity)}`}>
+                        {threat.severity}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-slate-300 mb-4">{threat.description}</p>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-600">
@@ -724,13 +808,6 @@ const CVEPulseWebsite = () => {
             >
               <TrendingUp className="w-5 h-5" />
               <span>View Live CVE Dashboard</span>
-            </button>
-            <button 
-              onClick={() => setShowPricing(true)}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
-            >
-              <DollarSign className="w-5 h-5" />
-              <span>View Pricing</span>
             </button>
             <button 
               onClick={() => setCurrentPage('contact')}
@@ -867,10 +944,10 @@ const CVEPulseWebsite = () => {
             Schedule a consultation to discuss how CVEPulse can protect your organization
           </p>
           <button 
-            onClick={() => setShowPricing(true)}
+            onClick={() => setCurrentPage('contact')}
             className="px-8 py-4 bg-white text-cyan-600 rounded-lg font-bold text-lg hover:bg-slate-100 transition-all transform hover:scale-105"
           >
-            View Pricing & Services
+            Contact Us Today
           </button>
         </div>
       </section>
@@ -879,63 +956,147 @@ const CVEPulseWebsite = () => {
 
   // Services Page
   const ServicesPage = () => (
-    <div className="min-h-screen bg-slate-900 py-20">
+    <div className="bg-slate-900 py-20">
       <div className="max-w-7xl mx-auto px-4">
-        <h1 className="text-5xl font-bold text-center mb-4 text-white">Our Services</h1>
-        <p className="text-xl text-center text-slate-400 mb-16 max-w-3xl mx-auto">
-          Comprehensive cybersecurity services powered by real-time intelligence and delivered by expert professionals
+        <h1 className="text-5xl font-bold text-white mb-6 text-center">Our Services</h1>
+        <p className="text-xl text-slate-400 text-center mb-12 max-w-3xl mx-auto">
+          Comprehensive security solutions tailored to your organization's needs
         </p>
 
-        {services.map((service, idx) => (
-          <div key={idx} className="mb-16 bg-slate-800 rounded-xl p-8 border border-slate-700">
-            <div className="flex items-start space-x-6 mb-8">
-              <service.icon className="w-16 h-16 text-cyan-400 flex-shrink-0" />
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-3">{service.title}</h2>
-                <p className="text-slate-400 text-lg">{service.description}</p>
+        <div className="space-y-16">
+          {services.map((service, idx) => (
+            <div key={idx} className="bg-slate-800 rounded-lg p-8 border border-slate-700">
+              <div className="flex items-center mb-6">
+                <service.icon className="w-12 h-12 text-cyan-400 mr-4" />
+                <h2 className="text-3xl font-bold text-white">{service.title}</h2>
               </div>
-            </div>
-
-            {service.categories && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {service.categories.map((category, cidx) => (
-                  <div key={cidx} className="bg-slate-900 rounded-lg p-5 border border-slate-700">
-                    <h3 className="text-lg font-semibold text-cyan-400 mb-3">{category.name}</h3>
-                    <ul className="space-y-2">
-                      {category.items.map((item, iidx) => (
-                        <li key={iidx} className="flex items-start text-slate-300 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+              <p className="text-slate-300 text-lg mb-8">{service.description}</p>
+              
+              {/* Service Categories */}
+              {service.categories && (
+                <div className="space-y-6 mb-8">
+                  <h3 className="text-xl font-semibold text-cyan-400 mb-4">Service Offerings:</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {service.categories.map((category, cidx) => (
+                      <div key={cidx} className="bg-slate-900/50 rounded-lg p-5 border border-slate-700">
+                        <h4 className="text-white font-semibold mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full mr-2"></div>
+                          {category.name}
+                        </h4>
+                        <ul className="space-y-2">
+                          {category.items.map((item, iidx) => (
+                            <li key={iidx} className="flex items-start text-slate-300 text-sm">
+                              <CheckCircle className="w-4 h-4 text-cyan-400 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
 
-            {service.engagementModels && (
-              <div className="bg-slate-900 rounded-lg p-6 border border-slate-700">
-                <h3 className="text-lg font-semibold text-white mb-4">Engagement Models</h3>
-                <div className="grid md:grid-cols-4 gap-4">
-                  {service.engagementModels.map((model, midx) => (
-                    <div key={midx} className="flex items-center text-slate-300 text-sm">
-                      <ArrowRight className="w-4 h-4 text-cyan-400 mr-2 flex-shrink-0" />
-                      {model}
+              {/* Engagement Models (only for VM) */}
+              {service.engagementModels && (
+                <div className="bg-gradient-to-r from-cyan-900/20 to-blue-900/20 rounded-lg p-6 border border-cyan-700/50">
+                  <h3 className="text-xl font-semibold text-cyan-400 mb-4">💼 Engagement Models:</h3>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {service.engagementModels.map((model, midx) => (
+                      <div key={midx} className="flex items-center text-slate-300">
+                        <CheckCircle className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
+                        <span>{model}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Features */}
+              {!service.categories && (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {service.features.map((feature, fidx) => (
+                    <div key={fidx} className="flex items-center text-slate-300">
+                      <CheckCircle className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
+                      <span>{feature}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))}
+        </div>
 
-        <div className="text-center mt-12">
+        {/* Why Choose CVEPulse Section */}
+        <div className="mt-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-8 border border-cyan-700/50">
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">🎯 Why Choose CVEPulse?</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">⚡ Real-Time Intelligence</h3>
+              <p className="text-slate-300 text-sm">Live CVE and Threat Intelligence dashboards with 15-minute refresh cycles - always know what's trending before it becomes an emergency</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">🎯 Risk-Based Prioritization</h3>
+              <p className="text-slate-300 text-sm">Beyond CVSS scores - we integrate threat intelligence, exploit availability, and business context to focus on what actually matters</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">🔍 Intelligence-Driven VM</h3>
+              <p className="text-slate-300 text-sm">Smarter than CVETrends - tracking curated security journalism from BleepingComputer, The Hacker News, and CISA for real threats</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">💼 Flexible Engagement Models</h3>
+              <p className="text-slate-300 text-sm">Choose from fixed-price assessments, managed services, staff augmentation, or strategic advisory - we adapt to your needs</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">🏭 Industry Expertise</h3>
+              <p className="text-slate-300 text-sm">Sector-specific threat intelligence and compliance frameworks for Finance, Healthcare, Manufacturing, Government, and more</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-cyan-400 font-semibold mb-3">🚀 Rapid Response</h3>
+              <p className="text-slate-300 text-sm">Zero-day and emergency response capabilities - detect, prioritize, and act on critical vulnerabilities within hours, not days</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-20">
+          <h2 className="text-4xl font-bold text-white text-center mb-12">Service Packages</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {packages.map((pkg, idx) => (
+              <div key={idx} className={`rounded-lg p-8 ${pkg.popular ? 'bg-gradient-to-br from-cyan-600 to-blue-600 transform scale-105' : 'bg-slate-800'} border ${pkg.popular ? 'border-cyan-400' : 'border-slate-700'}`}>
+                {pkg.popular && (
+                  <div className="bg-yellow-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full inline-block mb-4">
+                    MOST POPULAR
+                  </div>
+                )}
+                <h3 className="text-2xl font-bold text-white mb-2">{pkg.name}</h3>
+                <div className="text-3xl font-bold text-cyan-300 mb-2">{pkg.price}</div>
+                <p className="text-slate-300 text-sm mb-6">{pkg.description}</p>
+                <ul className="space-y-3 mb-8">
+                  {pkg.features.map((feature, fidx) => (
+                    <li key={fidx} className="flex items-start text-sm text-white">
+                      <CheckCircle className="w-5 h-5 text-cyan-300 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  onClick={() => setCurrentPage('contact')}
+                  className={`w-full py-3 rounded-lg font-semibold ${pkg.popular ? 'bg-white text-cyan-600 hover:bg-slate-100' : 'bg-cyan-600 text-white hover:bg-cyan-700'} transition-all`}
+                >
+                  {pkg.cta}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-16">
+          <p className="text-slate-400 mb-6">Need a custom solution? We'll tailor a package to your specific requirements.</p>
           <button 
-            onClick={() => setShowPricing(true)}
-            className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold text-lg hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"
+            onClick={() => setCurrentPage('contact')}
+            className="px-8 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold"
           >
-            Get a Quote
+            Contact Sales for Custom Pricing
           </button>
         </div>
       </div>
@@ -944,61 +1105,84 @@ const CVEPulseWebsite = () => {
 
   // About Page
   const AboutPage = () => (
-    <div className="min-h-screen bg-slate-900 py-20">
+    <div className="bg-slate-900 py-20">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-5xl font-bold text-center mb-8 text-white">About CVEPulse</h1>
+        <h1 className="text-5xl font-bold text-white mb-8 text-center">About CVEPulse</h1>
         
         <div className="bg-slate-800 rounded-lg p-8 mb-8 border border-slate-700">
-          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Our Mission</h2>
-          <p className="text-slate-300 leading-relaxed mb-4">
-            CVEPulse was founded with a simple mission: to democratize access to real-time vulnerability 
-            and threat intelligence. We believe every organization, regardless of size, deserves 
-            enterprise-grade security insights.
+          <h2 className="text-3xl font-bold text-white mb-4">Our Mission</h2>
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            CVEPulse was founded with a simple yet powerful mission: to provide organizations with real-time, 
+            actionable vulnerability and threat intelligence that enables proactive security defense.
           </p>
-          <p className="text-slate-300 leading-relaxed">
-            Our platform aggregates data from multiple trusted sources including CISA, NVD, 
-            BleepingComputer, The Hacker News, and dark web intelligence to provide a comprehensive 
-            view of the threat landscape.
+          <p className="text-slate-300 text-lg leading-relaxed">
+            In an era where cyber threats evolve at lightning speed, organizations need more than just vulnerability 
+            scanners—they need intelligence-driven security operations that prioritize what matters most.
           </p>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-8 mb-8 border border-slate-700">
-          <h2 className="text-2xl font-bold text-cyan-400 mb-4">What Sets Us Apart</h2>
-          <ul className="space-y-4">
-            <li className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+          <h2 className="text-3xl font-bold text-white mb-4">What Sets Us Apart</h2>
+          <div className="space-y-4">
+            <div className="flex items-start">
+              <CheckCircle className="w-6 h-6 text-cyan-400 mr-3 flex-shrink-0 mt-1" />
               <div>
-                <strong className="text-white">Real-Time Intelligence:</strong>
-                <span className="text-slate-300"> Our dashboards update every 15 minutes with the latest CVE and threat data.</span>
+                <h3 className="text-xl font-semibold text-white mb-2">Real-Time Intelligence Dashboards</h3>
+                <p className="text-slate-300">
+                  Our CVE and Threat Intelligence dashboards provide live, curated intelligence from trusted sources, 
+                  updated every 15 minutes with emergency and zero-day detection.
+                </p>
               </div>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="w-6 h-6 text-cyan-400 mr-3 flex-shrink-0 mt-1" />
               <div>
-                <strong className="text-white">Actionable Insights:</strong>
-                <span className="text-slate-300"> We don't just provide data – we provide prioritized recommendations for action.</span>
+                <h3 className="text-xl font-semibold text-white mb-2">Integrated Service Approach</h3>
+                <p className="text-slate-300">
+                  We don't just provide point solutions. Our VM, Threat Intelligence, Application Security, and SOC 
+                  services work together seamlessly to provide comprehensive protection.
+                </p>
               </div>
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+            </div>
+            <div className="flex items-start">
+              <CheckCircle className="w-6 h-6 text-cyan-400 mr-3 flex-shrink-0 mt-1" />
               <div>
-                <strong className="text-white">Expert Services:</strong>
-                <span className="text-slate-300"> Our consultancy team brings decades of combined experience in vulnerability management and threat intelligence.</span>
+                <h3 className="text-xl font-semibold text-white mb-2">Risk-Based Prioritization</h3>
+                <p className="text-slate-300">
+                  We go beyond CVSS scores, incorporating threat intelligence, exploit availability, and business 
+                  context to help you focus on vulnerabilities that pose the greatest risk.
+                </p>
               </div>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
 
         <div className="bg-slate-800 rounded-lg p-8 border border-slate-700">
-          <h2 className="text-2xl font-bold text-cyan-400 mb-4">Global Presence</h2>
-          <div className="grid md:grid-cols-2 gap-8">
+          <h2 className="text-3xl font-bold text-white mb-4">Our Expertise</h2>
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">🇬🇧 United Kingdom</h3>
-              <p className="text-slate-400">London Operations</p>
+              <h3 className="text-xl font-semibold text-cyan-400 mb-3">Industries We Serve</h3>
+              <ul className="space-y-2 text-slate-300">
+                <li>• Financial Services & Banking</li>
+                <li>• Healthcare & Life Sciences</li>
+                <li>• Manufacturing & Industrial</li>
+                <li>• Technology & SaaS</li>
+                <li>• Government & Public Sector</li>
+                <li>• Retail & E-commerce</li>
+                <li>• Energy & Utilities</li>
+              </ul>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">🇮🇳 India</h3>
-              <p className="text-slate-400">Delhi Operations</p>
+              <h3 className="text-xl font-semibold text-cyan-400 mb-3">Core Capabilities</h3>
+              <ul className="space-y-2 text-slate-300">
+                <li>• Vulnerability Management</li>
+                <li>• Threat Intelligence</li>
+                <li>• Application Security</li>
+                <li>• SOC Operations</li>
+                <li>• Incident Response</li>
+                <li>• Security Architecture</li>
+                <li>• Compliance & GRC</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -1008,177 +1192,224 @@ const CVEPulseWebsite = () => {
 
   // Contact Page
   const ContactPage = () => {
-    const [formData, setFormData] = useState({
-      name: '',
-      email: '',
-      company: '',
-      phone: '',
-      service: '',
-      message: ''
-    });
-    const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = React.useState({
+    name: '',
+    email: '',
+    company: '',
+    service: '',
+    message: ''
+  });
+  const [submitStatus, setSubmitStatus] = React.useState(''); // 'success', 'error', or ''
 
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      // Store in localStorage
-      const contacts = JSON.parse(localStorage.getItem('cvepulse_contacts') || '[]');
-      contacts.push({ ...formData, timestamp: new Date().toISOString() });
-      localStorage.setItem('cvepulse_contacts', JSON.stringify(contacts));
-      setSubmitted(true);
-    };
-
-    return (
-      <div className="min-h-screen bg-slate-900 py-20">
-        <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-5xl font-bold text-center mb-4 text-white">Contact Us</h1>
-          <p className="text-xl text-center text-slate-400 mb-16">
-            Ready to enhance your security posture? Get in touch with our team.
-          </p>
-
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <div className="bg-slate-800 rounded-lg p-8 border border-slate-700 mb-8">
-                <h2 className="text-2xl font-bold text-white mb-6">Get in Touch</h2>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <Mail className="w-6 h-6 text-cyan-400 mt-1" />
-                    <div>
-                      <h3 className="text-white font-semibold">Email</h3>
-                      <a href="mailto:business@cvepulse.com" className="text-slate-400 hover:text-cyan-400">
-                        business@cvepulse.com
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-4">
-                    <MapPin className="w-6 h-6 text-cyan-400 mt-1" />
-                    <div>
-                      <h3 className="text-white font-semibold">Locations</h3>
-                      <p className="text-slate-400">London, UK</p>
-                      <p className="text-slate-400">Delhi, India</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-cyan-600 to-blue-600 rounded-lg p-8">
-                <h2 className="text-2xl font-bold text-white mb-4">Prefer to schedule a call?</h2>
-                <p className="text-cyan-50 mb-6">
-                  Book a 30-minute consultation with our security experts
-                </p>
-                <button
-                  onClick={() => window.open('https://calendly.com/business-cvepulse/security-consultation', '_blank')}
-                  className="px-8 py-3 bg-white text-cyan-600 rounded-lg font-semibold hover:bg-slate-100 transition-all cursor-pointer"
-                >
-                  Schedule a Call
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-slate-800 rounded-lg p-8 border border-slate-700">
-              {submitted ? (
-                <div className="text-center py-12">
-                  <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
-                  <p className="text-slate-400">
-                    We've received your message and will get back to you within 24 hours.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-2">Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-2">Email *</label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-2">Company</label>
-                      <input
-                        type="text"
-                        value={formData.company}
-                        onChange={(e) => setFormData({...formData, company: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-                        placeholder="Company name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm text-slate-400 mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-                        placeholder="+1 234 567 8900"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">Service Interest</label>
-                    <select
-                      value={formData.service}
-                      onChange={(e) => setFormData({...formData, service: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="">Select a service...</option>
-                      <option value="vm">Vulnerability Management</option>
-                      <option value="threat-intel">Threat Intelligence</option>
-                      <option value="app-security">Application Threat Modeling</option>
-                      <option value="soc">SOC Monitoring</option>
-                      <option value="managed">Fully Managed Security</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-slate-400 mb-2">Message *</label>
-                    <textarea
-                      required
-                      rows={4}
-                      value={formData.message}
-                      onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none resize-none"
-                      placeholder="Tell us about your security needs..."
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-bold text-lg transition-all"
-                  >
-                    Send Message
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.message) {
+      setSubmitStatus('error');
+      setTimeout(() => setSubmitStatus(''), 3000);
+      return;
+    }
+
+    // Set submitting status
+    setSubmitStatus('submitting');
+
+    try {
+      // Submit to Formspree
+      const response = await fetch('https://formspree.io/f/xzdpogzn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        // Show success message
+        setSubmitStatus('success');
+        
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          setFormData({
+            name: '',
+            email: '',
+            company: '',
+            service: '',
+            message: ''
+          });
+          setSubmitStatus('');
+        }, 3000);
+      } else {
+        setSubmitStatus('error');
+        setTimeout(() => setSubmitStatus(''), 3000);
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus('error');
+      setTimeout(() => setSubmitStatus(''), 3000);
+    }
+  };
+
+  return (
+    <div className="bg-slate-900 py-20">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-5xl font-bold text-white mb-6 text-center">Contact Us</h1>
+        <p className="text-xl text-slate-400 text-center mb-12">
+          Ready to strengthen your security posture? Get in touch with our team today.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="bg-slate-800 rounded-lg p-8 border border-slate-700">
+            <h2 className="text-2xl font-bold text-white mb-6">Get In Touch</h2>
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <Mail className="w-6 h-6 text-cyan-400 mr-3 mt-1" />
+                <div>
+                  <div className="text-slate-400 text-sm">Email</div>
+                  <a href="mailto:business@cvepulse.com" className="text-white text-lg hover:text-cyan-400">
+                    business@cvepulse.com
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <Phone className="w-6 h-6 text-cyan-400 mr-3 mt-1" />
+                <div>
+                  <div className="text-slate-400 text-sm">Phone</div>
+                  <div className="text-white text-lg">
+                    Available upon request
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <MapPin className="w-6 h-6 text-cyan-400 mr-3 mt-1" />
+                <div>
+                  <div className="text-slate-400 text-sm">Location</div>
+                  <div className="text-white text-lg">
+                    London, UK | Delhi, India
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-800 rounded-lg p-8 border border-slate-700">
+            <h2 className="text-2xl font-bold text-white mb-6">Send a Message</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-slate-400 text-sm mb-2">Name *</label>
+                <input 
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="Your name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-2">Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="your@email.com"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-2">Company</label>
+                <input 
+                  type="text"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="Your company"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-2">Service Interest</label>
+                <select
+                  name="service"
+                  value={formData.service}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                >
+                  <option>Vulnerability Management</option>
+                  <option>Threat Intelligence</option>
+                  <option>Application Threat Modeling</option>
+                  <option>SOC Monitoring</option>
+                  <option>Multiple Services</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-2">Message *</label>
+                <textarea
+                  name="message"
+                  rows="4"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+                  placeholder="Tell us about your security needs..."
+                  required
+                ></textarea>
+              </div>
+              {submitStatus === 'submitting' && (
+                <div className="p-4 bg-blue-900/50 border border-blue-500 rounded-lg text-blue-200">
+                  ⏳ Sending message...
+                </div>
+              )}
+              {submitStatus === 'success' && (
+                <div className="p-4 bg-green-900/50 border border-green-500 rounded-lg text-green-200">
+                  ✅ Message sent successfully! We'll get back to you soon.
+                </div>
+              )}
+              {submitStatus === 'error' && (
+                <div className="p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
+                  ❌ Error sending message. Please try again or email us directly.
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={submitStatus === 'submitting'}
+                className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitStatus === 'submitting' ? 'Sending...' : 'Send Message'}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg p-8 text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Prefer to schedule a call?</h2>
+          <p className="text-cyan-50 mb-6">
+            Book a 30-minute consultation with our security experts
+          </p>
+          <button
+                onClick={() => {
+                  // Open email client as alternative to Calendly
+                  window.open('https://calendly.com/business-cvepulse/security-consultation', '_blank', 'width=900,height=900');
+                }}
+                className="px-8 py-3 bg-white text-cyan-600 rounded-lg font-semibold hover:bg-slate-100 transition-all cursor-pointer"
+              >
+                Schedule a Call
+              </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   // Privacy Policy Page
   const PrivacyPage = () => (
     <div className="min-h-screen bg-slate-900 pt-24 pb-16">
@@ -1227,7 +1458,7 @@ const CVEPulseWebsite = () => {
     </div>
   );
 
-  // Main Navigation Bar with Pricing Button
+  // Main Navigation Bar
   const NavigationBar = () => (
     <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
@@ -1238,8 +1469,8 @@ const CVEPulseWebsite = () => {
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigation.filter(item => !['privacy', 'terms'].includes(item.id)).map((item) => (
+          <div className="hidden md:flex space-x-1">
+            {navigation.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setCurrentPage(item.id)}
@@ -1252,14 +1483,6 @@ const CVEPulseWebsite = () => {
                 {item.name}
               </button>
             ))}
-            {/* Pricing Button */}
-            <button
-              onClick={() => setShowPricing(true)}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center space-x-1"
-            >
-              <DollarSign className="w-4 h-4" />
-              <span>Pricing</span>
-            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -1274,7 +1497,7 @@ const CVEPulseWebsite = () => {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-2">
-            {navigation.filter(item => !['privacy', 'terms'].includes(item.id)).map((item) => (
+            {navigation.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {
@@ -1290,15 +1513,6 @@ const CVEPulseWebsite = () => {
                 {item.name}
               </button>
             ))}
-            <button
-              onClick={() => {
-                setShowPricing(true);
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium"
-            >
-              💼 Pricing
-            </button>
           </div>
         )}
       </div>
@@ -1333,7 +1547,6 @@ const CVEPulseWebsite = () => {
             <ul className="space-y-2 text-slate-400 text-sm">
               <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setCurrentPage('about')}>About Us</li>
               <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setCurrentPage('contact')}>Contact</li>
-              <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setShowPricing(true)}>Pricing</li>
               <li onClick={() => setCurrentPage("privacy")} className="hover:text-cyan-400 cursor-pointer">Privacy Policy</li>
               <li onClick={() => setCurrentPage("terms")} className="hover:text-cyan-400 cursor-pointer">Terms of Service</li>
             </ul>
@@ -1382,21 +1595,6 @@ const CVEPulseWebsite = () => {
       <NavigationBar />
       {renderPage()}
       <Footer />
-      
-      {/* Phase 3 Modals */}
-      <PricingModal 
-        isOpen={showPricing} 
-        onClose={() => setShowPricing(false)} 
-      />
-      <AlertsModal 
-        isOpen={showAlerts} 
-        onClose={() => setShowAlerts(false)} 
-      />
-      <WatchlistManager 
-        isOpen={showWatchlist} 
-        onClose={() => setShowWatchlist(false)}
-        onWatchlistChange={setWatchlist}
-      />
     </div>
   );
 };

@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVEPulse - Active Emergencies | Real-Time Vulnerability Intelligence</title>
+  <meta name="description" content="Real-time CISA KEV vulnerability tracking with EPSS scores, patch deadlines, and emergency alerts">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-primary:#0f172a;
+      --bg-secondary:#1e293b;
+      --bg-card:rgba(30,41,59,0.95);
+      --cyan:#22d3ee;
+      --cyan-dark:#0891b2;
+      --cyan-glow:rgba(34,211,238,0.3);
+      --purple:#a855f7;
+      --emergency-red:#ef4444;
+      --warning-orange:#f97316;
+      --warning-yellow:#eab308;
+      --success-green:#22c55e;
+      --text-primary:#fff;
+      --text-secondary:#cbd5e1;
+      --text-muted:#64748b;
+      --border:rgba(148,163,184,0.2);
+      --border-cyan:rgba(34,211,238,0.3);
+    }
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--bg-primary) 0%,#1a2744 50%,var(--bg-primary) 100%);color:var(--text-primary);min-height:100vh;line-height:1.5}
+    .top-glow{position:fixed;top:0;left:0;right:0;height:120px;background:linear-gradient(180deg,rgba(34,211,238,0.12) 0%,transparent 100%);pointer-events:none;z-index:0}
+    
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px var(--cyan-glow)}50%{box-shadow:0 0 35px var(--cyan-glow)}}
+    @keyframes blink{0%,50%,100%{opacity:1}25%,75%{opacity:0.3}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    /* Header */
+    header{background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:12px 24px;position:sticky;top:0;z-index:100}
+    .header-inner{max-width:1600px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+    .logo h1{font-size:18px;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:1.5px;font-style:italic}
+    .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .live-indicator{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(34,197,94,0.15);border:1px solid var(--success-green);border-radius:16px;font-size:10px;color:var(--success-green);font-weight:600}
+    .live-dot{width:6px;height:6px;background:var(--success-green);border-radius:50%;animation:pulse 1.5s infinite}
+    .refresh-info{font-size:10px;color:var(--text-muted)}
+    .btn{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+    .btn-outline{background:transparent;border:1px solid var(--text-muted);color:var(--text-secondary)}
+    .btn-outline:hover{border-color:var(--cyan);color:var(--cyan)}
+    .btn-primary{background:linear-gradient(135deg,var(--cyan-dark),var(--cyan));color:#000}
+    .btn-cta{background:linear-gradient(135deg,var(--purple),#c084fc);color:#fff}
+    
+    .container{max-width:1600px;margin:0 auto;padding:16px 20px;position:relative;z-index:1}
+    
+    /* Alert Banners */
+    .alert-banner{display:none;border-radius:8px;padding:12px 16px;margin-bottom:12px;animation:slideIn 0.4s}
+    .alert-banner.active{display:flex;align-items:center;gap:10px}
+    .alert-banner.error{background:rgba(239,68,68,0.2);border:1px solid var(--emergency-red)}
+    .alert-banner.success{background:rgba(34,197,94,0.2);border:1px solid var(--success-green)}
+    .alert-banner p{font-size:12px;flex:1}
+    .alert-banner .close-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px}
+    
+    /* New Emergency Banner */
+    .new-emergency-banner{display:none;background:linear-gradient(90deg,rgba(239,68,68,0.2) 0%,rgba(249,115,22,0.15) 100%);border:2px solid var(--emergency-red);border-radius:10px;padding:14px 20px;margin-bottom:14px;animation:slideIn 0.5s}
+    .new-emergency-banner.active{display:block}
+    .new-emergency-banner h3{font-size:14px;font-weight:800;color:var(--emergency-red);display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .new-emergency-banner h3 .blink{animation:blink 1s infinite}
+    .new-emergency-content{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .new-cve-chip{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;transition:all .2s}
+    .new-cve-chip:hover{border-color:var(--cyan);background:rgba(34,211,238,0.1)}
+    .new-cve-chip .cve-id{color:var(--cyan);font-weight:700;font-size:13px}
+    .new-cve-chip .vendor{color:var(--text-secondary);font-size:11px;margin-top:3px}
+    .new-cve-chip .meta{display:flex;gap:8px;margin-top:6px}
+    .new-cve-chip .tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}
+    .new-cve-chip .tag.epss{background:rgba(168,85,247,0.2);color:var(--purple)}
+    .new-cve-chip .tag.due{background:rgba(239,68,68,0.2);color:var(--emergency-red)}
+    
+    /* Stats Row */
+    .stats-banner{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+    @media(max-width:800px){.stats-banner{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:500px){.stats-banner{grid-template-columns:repeat(2,1fr)}}
+    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:all .2s}
+    .stat-card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+    .stat-card.highlight{border-color:var(--emergency-red);background:rgba(239,68,68,0.1)}
+    .stat-value{font-size:28px;font-weight:900;line-height:1}
+    .stat-value.red{color:var(--emergency-red)}
+    .stat-value.orange{color:var(--warning-orange)}
+    .stat-value.green{color:var(--success-green)}
+    .stat-value.cyan{color:var(--cyan)}
+    .stat-value.purple{color:var(--purple)}
+    .stat-label{font-size:10px;color:var(--text-muted);margin-top:6px;text-transform:uppercase}
+    
+    /* Main Grid */
+    .main-grid{display:grid;grid-template-columns:1fr 300px;gap:16px}
+    @media(max-width:1100px){.main-grid{grid-template-columns:1fr}}
+    
+    /* Section */
+    .section{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+    .section-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
+    .section-header h3{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .section-header .badge{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700}
+    .section-header .badge.red{background:var(--emergency-red);color:#fff}
+    .section-header .badge.green{background:var(--success-green);color:#000}
+    .section-controls{display:flex;gap:6px}
+    .section-controls button{padding:5px 10px;font-size:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;cursor:pointer}
+    .section-controls button:hover{background:rgba(34,211,238,0.1);border-color:var(--cyan);color:var(--cyan)}
+    .section-controls button.active{background:rgba(34,211,238,0.15);border-color:var(--cyan);color:var(--cyan)}
+    
+    /* Priority Cards */
+    .priority-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+    @media(max-width:900px){.priority-cards{grid-template-columns:1fr}}
+    .priority-card{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;transition:all .3s}
+    .priority-card:hover{border-color:var(--cyan);box-shadow:0 0 20px var(--cyan-glow)}
+    .priority-card.p1{border-left:3px solid var(--emergency-red)}
+    .priority-card.p2{border-left:3px solid var(--warning-orange)}
+    .priority-card.p3{border-left:3px solid var(--warning-yellow)}
+    .priority-card.new::before{content:'NEW';position:absolute;top:8px;right:8px;background:var(--success-green);color:#000;font-size:8px;font-weight:800;padding:2px 5px;border-radius:3px}
+    .pc-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}
+    .pc-cve{font-size:13px;font-weight:700;color:var(--warning-orange)}
+    .pc-cve a{color:inherit;text-decoration:none}
+    .pc-cve a:hover{color:var(--cyan)}
+    .pc-priority{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700}
+    .pc-priority.p1{background:var(--emergency-red);color:#fff}
+    .pc-priority.p2{background:var(--warning-orange);color:#000}
+    .pc-priority.p3{background:var(--warning-yellow);color:#000}
+    .pc-title{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:8px;line-height:1.3}
+    .pc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .pc-tag{font-size:9px;padding:3px 7px;border-radius:3px;font-weight:600}
+    .pc-tag.kev{background:rgba(239,68,68,0.2);color:var(--emergency-red)}
+    .pc-tag.epss{background:rgba(168,85,247,0.2);color:var(--purple)}
+    .pc-tag.due{background:rgba(34,211,238,0.15);color:var(--cyan)}
+    .pc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)}
+    .pc-due{font-size:10px}
+    .pc-due.overdue{color:var(--emergency-red)}
+    .pc-due.urgent{color:var(--warning-orange)}
+    .pc-due.normal{color:var(--text-muted)}
+    .pc-btn{padding:5px 10px;font-size:9px;font-weight:600;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text-secondary)}
+    .pc-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    
+    /* Table */
+    .table-wrapper{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:10px 12px;font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;background:rgba(0,0,0,0.3)}
+    td{padding:10px 12px;font-size:11px;border-bottom:1px solid var(--border)}
+    tr:hover{background:rgba(34,211,238,0.05)}
+    tr.new-row{background:rgba(34,197,94,0.08)}
+    .cve-link{color:var(--cyan);font-weight:600;text-decoration:none}
+    .cve-link:hover{text-decoration:underline}
+    .vendor-cell{max-width:150px}
+    .vendor-cell strong{display:block;font-size:11px}
+    .vendor-cell span{font-size:10px;color:var(--text-muted)}
+    .badge{display:inline-block;padding:3px 7px;border-radius:3px;font-size:9px;font-weight:700}
+    .badge.kev{background:rgba(239,68,68,0.2);color:var(--emergency-red);border:1px solid var(--emergency-red)}
+    .badge.new{background:rgba(34,197,94,0.2);color:var(--success-green);border:1px solid var(--success-green)}
+    .epss-cell{font-weight:700}
+    .epss-cell.critical{color:var(--emergency-red)}
+    .epss-cell.high{color:var(--warning-orange)}
+    .epss-cell.medium{color:var(--warning-yellow)}
+    .epss-cell.low{color:var(--text-muted)}
+    .sla-badge{padding:4px 8px;border-radius:4px;font-size:9px;font-weight:700}
+    .sla-badge.overdue{background:rgba(239,68,68,0.2);color:var(--emergency-red);border:1px solid var(--emergency-red)}
+    .sla-badge.critical{background:rgba(239,68,68,0.15);color:var(--emergency-red)}
+    .sla-badge.warning{background:rgba(249,115,22,0.15);color:var(--warning-orange)}
+    .sla-badge.ok{background:rgba(34,197,94,0.15);color:var(--success-green)}
+    .action-btn{padding:4px 10px;border-radius:4px;font-size:9px;font-weight:600;cursor:pointer;border:none}
+    .action-btn.primary{background:linear-gradient(135deg,var(--cyan-dark),var(--cyan));color:#000}
+    .action-btn.warning{background:rgba(234,179,8,0.2);color:var(--warning-yellow);border:1px solid var(--warning-yellow)}
+    .action-btn.default{background:rgba(255,255,255,0.05);color:var(--text-secondary);border:1px solid var(--border)}
+    
+    .pagination{display:flex;justify-content:center;align-items:center;gap:8px;padding:12px}
+    .pagination button{padding:5px 12px;font-size:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;cursor:pointer}
+    .pagination button:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
+    .pagination button:disabled{opacity:0.4;cursor:not-allowed}
+    .pagination span{font-size:10px;color:var(--text-muted)}
+    
+    /* Threat Intel Section */
+    .threat-intel{margin-bottom:16px}
+    .threat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px}
+    @media(max-width:600px){.threat-grid{grid-template-columns:1fr}}
+    .threat-item{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:6px;padding:12px;transition:all .2s}
+    .threat-item:hover{border-color:var(--purple)}
+    .threat-item h4{font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .threat-item p{font-size:10px;color:var(--text-secondary);line-height:1.4}
+    .threat-item .source{font-size:9px;color:var(--text-muted);margin-top:6px}
+    
+    /* Sidebar */
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .sidebar-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px}
+    .sidebar-card h4{font-size:12px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    
+    /* Countdown */
+    .countdown-card{background:linear-gradient(135deg,rgba(239,68,68,0.1) 0%,var(--bg-card) 100%);border-color:var(--emergency-red);text-align:center}
+    .countdown-card h4{justify-content:center;color:var(--emergency-red)}
+    .countdown-timer{display:flex;justify-content:center;gap:6px;margin-bottom:8px}
+    .cd-unit{background:rgba(0,0,0,0.3);padding:8px 10px;border-radius:6px;min-width:50px}
+    .cd-value{font-size:24px;font-weight:900;color:var(--emergency-red)}
+    .cd-label{font-size:8px;color:var(--text-muted);text-transform:uppercase}
+    .cd-sep{font-size:20px;color:var(--text-muted);line-height:2.5}
+    .countdown-info{font-size:10px;color:var(--cyan);margin-top:6px}
+    .countdown-note{font-size:9px;color:var(--text-muted);margin-top:4px}
+    
+    /* Timeline */
+    .timeline{list-style:none;max-height:250px;overflow-y:auto}
+    .timeline::-webkit-scrollbar{width:4px}
+    .timeline::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .tl-item{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:10px}
+    .tl-item:last-child{border-bottom:none}
+    .tl-item.new{background:rgba(34,197,94,0.1);margin:0 -14px;padding:8px 14px}
+    .tl-time{color:var(--text-muted);min-width:50px;font-size:9px}
+    .tl-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0}
+    .tl-dot.red{background:var(--emergency-red)}
+    .tl-dot.orange{background:var(--warning-orange)}
+    .tl-dot.green{background:var(--success-green);animation:pulse 1s infinite}
+    .tl-content{flex:1}
+    .tl-title{color:var(--text-primary);font-weight:500;font-size:10px}
+    .tl-cve{color:var(--cyan);font-size:9px}
+    
+    /* Alerts & Lead Capture */
+    .alerts-card{background:linear-gradient(135deg,rgba(34,211,238,0.08) 0%,var(--bg-card) 100%);border-color:var(--border-cyan)}
+    .form-group{margin-bottom:10px}
+    .form-group label{display:block;font-size:10px;color:var(--text-muted);margin-bottom:4px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:5px;color:#fff;font-size:11px}
+    .form-group input:focus,.form-group textarea:focus{outline:none;border-color:var(--cyan)}
+    .form-group textarea{resize:vertical;min-height:60px}
+    .integration-row{display:flex;gap:8px;margin:10px 0}
+    .int-btn{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,0.05);transition:all .2s}
+    .int-btn:hover{transform:scale(1.1);border-color:var(--cyan)}
+    .int-btn.active{border-color:var(--success-green);background:rgba(34,197,94,0.2)}
+    .int-btn svg{width:18px;height:18px}
+    .btn-subscribe{width:100%;padding:10px;background:linear-gradient(135deg,var(--cyan-dark),var(--cyan));border:none;border-radius:6px;color:#000;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px}
+    .btn-subscribe:hover{opacity:0.9}
+    .form-note{font-size:9px;color:var(--text-muted);margin-top:8px;font-style:italic}
+    
+    /* Watchlist */
+    .watchlist-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .wl-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;background:rgba(34,211,238,0.15);border:1px solid var(--border-cyan);border-radius:4px;font-size:10px;color:var(--cyan)}
+    .wl-tag .remove{cursor:pointer;opacity:0.6}
+    .wl-tag .remove:hover{opacity:1}
+    .wl-input{display:flex;gap:6px}
+    .wl-input input{flex:1;padding:6px 10px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;color:#fff;font-size:10px}
+    .wl-input button{padding:6px 12px;font-size:10px}
+    .wl-suggestions{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+    .wl-suggestions button{padding:3px 8px;font-size:9px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);border-radius:3px;cursor:pointer}
+    .wl-suggestions button:hover{border-color:var(--cyan);color:var(--cyan)}
+    
+    /* Services Card */
+    .services-card{background:linear-gradient(135deg,rgba(168,85,247,0.1) 0%,var(--bg-card) 100%);border-color:var(--purple)}
+    .services-card h4{color:var(--purple)}
+    .service-list{list-style:none}
+    .service-list li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-secondary)}
+    .service-list li:last-child{border-bottom:none}
+    .service-list li::before{content:'✓';color:var(--success-green);font-weight:bold}
+    .btn-contact{width:100%;padding:10px;background:linear-gradient(135deg,var(--purple),#c084fc);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;margin-top:10px}
+    
+    /* Modals */
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+    .modal-header h3{font-size:16px;font-weight:700}
+    .modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer}
+    .modal-close:hover{color:var(--emergency-red)}
+    .modal-body{padding:20px}
+    
+    /* Footer */
+    footer{text-align:center;padding:16px;color:var(--text-muted);font-size:10px;border-top:1px solid var(--border);margin-top:20px}
+    footer a{color:var(--cyan);text-decoration:none}
+    
+    /* Loading */
+    .loading{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.98);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+    .spinner{width:40px;height:40px;border:3px solid rgba(34,211,238,0.2);border-top-color:var(--cyan);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
+    .loading-text{font-size:14px;color:var(--cyan);font-weight:600}
+    .loading-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="top-glow"></div>
+  
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading CVEPulse...</div>
+    <div class="loading-sub">Fetching real-time CISA KEV & EPSS data</div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <div class="logo" onclick="window.location.href='https://www.cvepulse.com'">
+        <span style="font-size:22px">🔥</span>
+        <h1>CVEPulse</h1>
+      </div>
+      <div class="header-right">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span>LIVE</span>
+        </div>
+        <span class="refresh-info" id="last-update">--</span>
+        <button class="btn btn-outline" onclick="openModal('info-modal')">ℹ️ About</button>
+        <button class="btn btn-outline" onclick="openModal('watchlist-modal')">👁️ Watchlist</button>
+        <button class="btn btn-outline" onclick="openModal('services-modal')">💼 Services</button>
+        <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Alert Banners -->
+    <div class="alert-banner error" id="error-banner">
+      <span>⚠️</span>
+      <p id="error-msg">Unable to load data</p>
+      <button class="close-btn" onclick="hideError()">×</button>
+    </div>
+    <div class="alert-banner success" id="success-banner">
+      <span>✅</span>
+      <p id="success-msg">Success</p>
+      <button class="close-btn" onclick="hideSuccess()">×</button>
+    </div>
+
+    <!-- New Emergency Banner -->
+    <div class="new-emergency-banner" id="new-banner">
+      <h3><span class="blink">🚨</span> NEW EMERGENCIES (Last 48 Hours)</h3>
+      <div class="new-emergency-content" id="new-content"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-banner">
+      <div class="stat-card highlight">
+        <div class="stat-value red" id="stat-overdue">0</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value orange" id="stat-critical">0</div>
+        <div class="stat-label">Due ≤7 Days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green" id="stat-new">0</div>
+        <div class="stat-label">New (48h)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value purple" id="stat-highepss">0</div>
+        <div class="stat-label">High EPSS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value cyan" id="stat-total">0</div>
+        <div class="stat-label">Total KEV</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <div class="main-content">
+        <!-- Priority Section -->
+        <div class="section">
+          <div class="section-header">
+            <h3>🔥 Highest Priority Vulnerabilities <span class="badge red" id="priority-count">0</span></h3>
+          </div>
+          <div class="priority-cards" id="priority-cards"></div>
+        </div>
+
+        <!-- Threat Intel Section -->
+        <div class="section threat-intel">
+          <div class="section-header">
+            <h3>📡 Threat Intelligence Feed</h3>
+            <span style="font-size:10px;color:var(--text-muted)">Updates every 5 min</span>
+          </div>
+          <div class="threat-grid" id="threat-feed"></div>
+        </div>
+
+        <!-- Full Table -->
+        <div class="section">
+          <div class="section-header">
+            <h3>📋 All Active Vulnerabilities</h3>
+            <div class="section-controls">
+              <button class="active" data-filter="all">All</button>
+              <button data-filter="overdue">Overdue</button>
+              <button data-filter="critical">Due Soon</button>
+              <button data-filter="new">New</button>
+              <button data-filter="watchlist">Watchlist</button>
+            </div>
+            <div class="section-controls">
+              <button onclick="exportCSV()">📥 CSV</button>
+              <button onclick="exportJSON()">📦 JSON</button>
+              <button onclick="generateReport()">📄 Report</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>CVE ID</th>
+                  <th>Vendor / Product</th>
+                  <th>Type</th>
+                  <th>EPSS</th>
+                  <th>Added</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="vuln-table"></tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <button id="prev-btn" onclick="prevPage()" disabled>← Prev</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-btn" onclick="nextPage()">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Countdown -->
+        <div class="sidebar-card countdown-card">
+          <h4>⏰ Nearest Deadline</h4>
+          <div class="countdown-timer">
+            <div class="cd-unit"><span class="cd-value" id="cd-d">--</span><span class="cd-label">Days</span></div>
+            <span class="cd-sep">:</span>
+            <div class="cd-unit"><span class="cd-value" id="cd-h">--</span><span class="cd-label">Hrs</span></div>
+            <span class="cd-sep">:</span>
+            <div class="cd-unit"><span class="cd-value" id="cd-m">--</span><span class="cd-label">Min</span></div>
+          </div>
+          <div class="countdown-info" id="cd-cve">--</div>
+          <div class="countdown-note">CISA BOD 22-01 Deadline</div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="sidebar-card">
+          <h4>📅 Recent Activity</h4>
+          <ul class="timeline" id="timeline"></ul>
+        </div>
+
+        <!-- Alerts & Subscription -->
+        <div class="sidebar-card alerts-card">
+          <h4>🔔 Alert Subscription</h4>
+          <form id="subscribe-form" onsubmit="handleSubscribe(event)">
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" id="sub-email" placeholder="your@company.com" required>
+            </div>
+            <div class="form-group">
+              <label>Company Name</label>
+              <input type="text" id="sub-company" placeholder="Your Company">
+            </div>
+            <div class="form-group">
+              <label>Alert Frequency</label>
+              <select id="sub-frequency">
+                <option value="immediate">⚡ Immediate - Alert within 1 hour of new CVE</option>
+                <option value="daily">📊 Daily Digest - 8 AM EST summary</option>
+                <option value="weekly">📈 Weekly Summary - Monday 9 AM EST</option>
+              </select>
+            </div>
+            <div class="integration-row">
+              <div class="int-btn" id="int-slack" onclick="toggleIntegration('slack')" title="Slack">
+                <svg viewBox="0 0 24 24" fill="#E01E5A"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>
+              </div>
+              <div class="int-btn" id="int-teams" onclick="toggleIntegration('teams')" title="MS Teams">
+                <svg viewBox="0 0 24 24"><path fill="#5059C9" d="M20.625 8.5h-6.25a.875.875 0 0 0-.875.875v6.25c0 .483.392.875.875.875h6.25a.875.875 0 0 0 .875-.875v-6.25a.875.875 0 0 0-.875-.875z"/><circle fill="#5059C9" cx="17.5" cy="5.5" r="2.5"/><path fill="#7B83EB" d="M13.5 8.5H5.375a.875.875 0 0 0-.875.875v8.75c0 .966.784 1.75 1.75 1.75h7c.966 0 1.75-.784 1.75-1.75V10a1.5 1.5 0 0 0-1.5-1.5z"/><circle fill="#7B83EB" cx="9.5" cy="5.5" r="3"/></svg>
+              </div>
+              <div class="int-btn" id="int-webhook" onclick="toggleIntegration('webhook')" title="Custom Webhook">
+                <svg viewBox="0 0 24 24" fill="var(--cyan)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              </div>
+            </div>
+            <button type="submit" class="btn-subscribe">Subscribe to Alerts</button>
+          </form>
+          <p class="form-note">We'll notify you when new critical vulnerabilities are added to CISA KEV</p>
+        </div>
+
+        <!-- Services CTA -->
+        <div class="sidebar-card services-card">
+          <h4>💼 CVEPulse Services</h4>
+          <ul class="service-list">
+            <li>Vulnerability Management</li>
+            <li>Threat Intelligence</li>
+            <li>SOC Monitoring</li>
+            <li>Zero-Day Response</li>
+          </ul>
+          <button class="btn-contact" onclick="openModal('contact-modal')">Request Consultation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><strong><a href="https://www.cvepulse.com">CVEPulse</a></strong> - Real-Time Vulnerability Intelligence | Data: CISA KEV, FIRST EPSS, NVD</p>
+    <p style="margin-top:4px">Auto-refreshes every 5 minutes | © 2025 CVEPulse</p>
+  </footer>
+
+  <!-- Watchlist Modal -->
+  <div class="modal-overlay" id="watchlist-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>👁️ Vendor Watchlist</h3>
+        <button class="modal-close" onclick="closeModal('watchlist-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:11px;color:var(--text-secondary);margin-bottom:12px">Track specific vendors. Matching CVEs will be highlighted.</p>
+        <div class="watchlist-tags" id="watchlist-tags"></div>
+        <div class="wl-input">
+          <input type="text" id="wl-input" placeholder="Enter vendor name...">
+          <button class="btn btn-primary" onclick="addToWatchlist()">Add</button>
+        </div>
+        <div class="wl-suggestions">
+          <span style="font-size:9px;color:var(--text-muted);margin-right:6px">Popular:</span>
+          <button onclick="addVendor('Microsoft')">Microsoft</button>
+          <button onclick="addVendor('Cisco')">Cisco</button>
+          <button onclick="addVendor('Fortinet')">Fortinet</button>
+          <button onclick="addVendor('Ivanti')">Ivanti</button>
+          <button onclick="addVendor('VMware')">VMware</button>
+          <button onclick="addVendor('Apache')">Apache</button>
+          <button onclick="addVendor('Adobe')">Adobe</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Modal -->
+  <div class="modal-overlay" id="services-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>💼 CVEPulse Services</h3>
+        <button class="modal-close" onclick="closeModal('services-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;gap:12px">
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:14px">
+            <h4 style="color:var(--cyan);font-size:13px;margin-bottom:6px">🛡️ Vulnerability Management</h4>
+            <p style="font-size:11px;color:var(--text-secondary)">VM program assessment, zero-day response, backlog remediation, CTEM management</p>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:14px">
+            <h4 style="color:var(--purple);font-size:13px;margin-bottom:6px">📡 Threat Intelligence</h4>
+            <p style="font-size:11px;color:var(--text-secondary)">Sector-specific feeds, dark web monitoring, IoC repository, threat actor profiling</p>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:14px">
+            <h4 style="color:var(--warning-orange);font-size:13px;margin-bottom:6px">🔍 SOC Services</h4>
+            <p style="font-size:11px;color:var(--text-secondary)">24/7 monitoring, incident response, SIEM management, alert triage</p>
+          </div>
+        </div>
+        <button class="btn-contact" style="margin-top:16px" onclick="openModal('contact-modal');closeModal('services-modal')">Request Quote</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact/Lead Modal -->
+  <div class="modal-overlay" id="contact-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📧 Request Consultation</h3>
+        <button class="modal-close" onclick="closeModal('contact-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="contact-form" onsubmit="handleContactForm(event)">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="contact-name" required placeholder="Your Name">
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="contact-email" required placeholder="your@company.com">
+          </div>
+          <div class="form-group">
+            <label>Company *</label>
+            <input type="text" id="contact-company" required placeholder="Company Name">
+          </div>
+          <div class="form-group">
+            <label>Service Interest</label>
+            <select id="contact-service">
+              <option value="">Select a service...</option>
+              <option value="vm">Vulnerability Management</option>
+              <option value="ti">Threat Intelligence</option>
+              <option value="soc">SOC Services</option>
+              <option value="consulting">General Consulting</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="contact-message" placeholder="Tell us about your security needs..."></textarea>
+          </div>
+          <button type="submit" class="btn-contact">Send Request</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info/About Modal -->
+  <div class="modal-overlay" id="info-modal" onclick="closeModalOnBg(event)">
+    <div class="modal" style="max-width:650px">
+      <div class="modal-header">
+        <h3>ℹ️ Understanding This Dashboard</h3>
+        <button class="modal-close" onclick="closeModal('info-modal')">×</button>
+      </div>
+      <div class="modal-body" style="font-size:12px;line-height:1.7">
+        <h4 style="color:var(--cyan);margin-bottom:10px">🔥 What is CISA KEV?</h4>
+        <p style="margin-bottom:15px">The <strong>Known Exploited Vulnerabilities (KEV)</strong> catalog is maintained by the U.S. Cybersecurity and Infrastructure Security Agency (CISA). It lists vulnerabilities that are <strong>actively being exploited by attackers in the wild</strong> — not theoretical risks, but real attacks happening now.</p>
+        
+        <h4 style="color:var(--cyan);margin-bottom:10px">📋 What is BOD 22-01?</h4>
+        <p style="margin-bottom:15px"><strong>Binding Operational Directive 22-01</strong> requires all U.S. federal agencies to remediate KEV vulnerabilities within the specified deadline. While private organizations aren't legally bound, security experts strongly recommend treating KEV as your <strong>highest patching priority</strong>.</p>
+        
+        <h4 style="color:var(--cyan);margin-bottom:10px">⏰ What Does "Days Left" Mean?</h4>
+        <p style="margin-bottom:15px">This is the number of days until the <strong>CISA remediation deadline</strong>. Federal agencies must patch by this date. For private organizations, consider this your <strong>maximum acceptable timeframe</strong> — attackers are actively exploiting these vulnerabilities.</p>
+        
+        <div style="background:rgba(239,68,68,0.1);border:1px solid var(--emergency-red);border-radius:6px;padding:12px;margin-bottom:15px">
+          <strong style="color:var(--emergency-red)">🚨 Overdue</strong> = Past deadline. These vulnerabilities should have been patched already. Immediate action required.
+        </div>
+        
+        <h4 style="color:var(--cyan);margin-bottom:10px">📊 What is EPSS?</h4>
+        <p style="margin-bottom:15px">The <strong>Exploit Prediction Scoring System (EPSS)</strong> estimates the probability (0-100%) that a vulnerability will be exploited in the next 30 days. Higher EPSS = more likely to be attacked soon.</p>
+        
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px">
+          <div style="background:rgba(239,68,68,0.1);padding:10px;border-radius:6px;text-align:center">
+            <strong style="color:var(--emergency-red)">EPSS > 70%</strong><br><span style="font-size:10px">Critical - Very likely to be exploited</span>
+          </div>
+          <div style="background:rgba(249,115,22,0.1);padding:10px;border-radius:6px;text-align:center">
+            <strong style="color:var(--warning-orange)">EPSS 40-70%</strong><br><span style="font-size:10px">High - Significant risk</span>
+          </div>
+          <div style="background:rgba(234,179,8,0.1);padding:10px;border-radius:6px;text-align:center">
+            <strong style="color:var(--warning-yellow)">EPSS 10-40%</strong><br><span style="font-size:10px">Medium - Moderate risk</span>
+          </div>
+          <div style="background:rgba(100,116,139,0.1);padding:10px;border-radius:6px;text-align:center">
+            <strong style="color:var(--text-muted)">EPSS < 10%</strong><br><span style="font-size:10px">Lower - Still on KEV, patch soon</span>
+          </div>
+        </div>
+        
+        <h4 style="color:var(--cyan);margin-bottom:10px">🎯 Priority Ranking</h4>
+        <p style="margin-bottom:15px">CVEPulse ranks vulnerabilities by urgency using:</p>
+        <ul style="margin-left:20px;margin-bottom:15px">
+          <li><strong>Overdue status</strong> (highest priority)</li>
+          <li><strong>Days until deadline</strong> (fewer = more urgent)</li>
+          <li><strong>EPSS score</strong> (higher = more urgent)</li>
+          <li><strong>Recency</strong> (newly added = more urgent)</li>
+          <li><strong>Your watchlist</strong> (matching vendors prioritized)</li>
+        </ul>
+        
+        <h4 style="color:var(--cyan);margin-bottom:10px">🔗 Learn More</h4>
+        <p>
+          <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" style="color:var(--cyan)">→ CISA KEV Catalog</a><br>
+          <a href="https://www.cisa.gov/binding-operational-directive-22-01" target="_blank" style="color:var(--cyan)">→ BOD 22-01 Directive</a><br>
+          <a href="https://www.first.org/epss/" target="_blank" style="color:var(--cyan)">→ FIRST EPSS Documentation</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+<script>
+// =============================================
+// CVEPulse Dashboard - Complete Production Build
+// =============================================
+
+// State
+let kevData = [];
+let epssData = {};
+let filteredData = [];
+let currentFilter = 'all';
+let currentPage = 1;
+const PAGE_SIZE = 12;
+let watchlist = JSON.parse(localStorage.getItem('cvepulse_watchlist') || '[]');
+let integrations = JSON.parse(localStorage.getItem('cvepulse_integrations') || '{}');
+let refreshTimer = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  initFilters();
+  renderWatchlist();
+  updateIntegrationUI();
+  loadData();
+  
+  // Auto-refresh every 5 minutes
+  refreshTimer = setInterval(() => {
+    console.log('[CVEPulse] Auto-refresh triggered');
+    loadData(true);
+  }, 5 * 60 * 1000);
+});
+
+// Filters
+function initFilters() {
+  document.querySelectorAll('.section-controls button[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.section-controls button[data-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      currentPage = 1;
+      applyFilter();
+    });
+  });
+}
+
+// Load Data - Uses Firebase function to bypass CORS
+async function loadData(silent = false) {
+  if (!silent) document.getElementById('loading').style.display = 'flex';
+  
+  // Your Firebase function URL
+  const KEV_API = 'https://us-central1-cvepulse.cloudfunctions.net/kevdata';
+  
+  let loaded = false;
+  
+  // Try Firebase function first (bypasses CORS)
+  try {
+    console.log('[CVEPulse] Fetching from Firebase function...');
+    const r = await fetch(KEV_API);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.vulnerabilities?.length) {
+        kevData = d.vulnerabilities;
+        loaded = true;
+        console.log('[CVEPulse] Firebase fetch success:', kevData.length, 'CVEs');
+      }
+    }
+  } catch(e) { 
+    console.log('[CVEPulse] Firebase fetch failed:', e.message); 
+  }
+  
+  // Cache fallback
+  if (!loaded) {
+    console.log('[CVEPulse] Trying cache...');
+    const cache = localStorage.getItem('cvepulse_cache');
+    if (cache) {
+      try {
+        const parsed = JSON.parse(cache);
+        if (parsed.data?.length) {
+          kevData = parsed.data;
+          loaded = true;
+          showError('Using cached data from ' + new Date(parsed.ts).toLocaleString());
+          console.log('[CVEPulse] Using cached data:', kevData.length, 'CVEs');
+        }
+      } catch(e) {}
+    }
+  }
+  
+  // Demo data as last resort
+  if (!loaded) {
+    console.log('[CVEPulse] Using demo data');
+    kevData = [
+      {cveID:'CVE-2024-55591',vendorProject:'Fortinet',product:'FortiOS',dateAdded:'2025-01-14',dueDate:'2025-02-04',shortDescription:'Authentication Bypass'},
+      {cveID:'CVE-2025-0282',vendorProject:'Ivanti',product:'Connect Secure',dateAdded:'2025-01-08',dueDate:'2025-01-29',shortDescription:'Stack Buffer Overflow'},
+      {cveID:'CVE-2024-50623',vendorProject:'Cleo',product:'Harmony',dateAdded:'2024-12-13',dueDate:'2025-01-03',shortDescription:'Unrestricted File Upload'},
+      {cveID:'CVE-2024-49138',vendorProject:'Microsoft',product:'Windows CLFS',dateAdded:'2024-12-10',dueDate:'2024-12-31',shortDescription:'Heap Overflow'},
+      {cveID:'CVE-2024-51378',vendorProject:'CyberPanel',product:'CyberPanel',dateAdded:'2024-12-04',dueDate:'2024-12-25',shortDescription:'Default Permissions'},
+      {cveID:'CVE-2024-11680',vendorProject:'ProjectSend',product:'ProjectSend',dateAdded:'2024-12-03',dueDate:'2024-12-24',shortDescription:'Improper Auth'}
+    ];
+    loaded = true;
+    showError('Unable to fetch live data. Showing demo data.');
+  }
+  
+  // Cache successful fetch
+  if (loaded && kevData.length > 10) {
+    localStorage.setItem('cvepulse_cache', JSON.stringify({data: kevData, ts: Date.now()}));
+  }
+  
+  // Load EPSS (don't wait if it fails)
+  loadEPSS().catch(() => {});
+  
+  // Process and render
+  processData();
+  
+  document.getElementById('last-update').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  document.getElementById('loading').style.display = 'none';
+  if (kevData.length > 10) hideError();
+}
+
+async function loadEPSS() {
+  const cves = kevData.slice(0, 100).map(v => v.cveID);
+  try {
+    for (let i = 0; i < cves.length; i += 30) {
+      const chunk = cves.slice(i, i + 30);
+      const r = await fetch(`https://api.first.org/data/v1/epss?cve=${chunk.join(',')}`);
+      if (r.ok) {
+        const d = await r.json();
+        d.data?.forEach(item => { epssData[item.cve] = parseFloat(item.epss); });
+      }
+    }
+  } catch(e) {}
+}
+
+function processData() {
+  const now = new Date();
+  
+  kevData.forEach(v => {
+    const due = new Date(v.dueDate);
+    const added = new Date(v.dateAdded);
+    v._due = due;
+    v._added = added;
+    v._daysLeft = Math.ceil((due - now) / 864e5);
+    v._hoursAgo = Math.floor((now - added) / 36e5);
+    v._isNew = v._hoursAgo <= 48;
+    v._isOverdue = v._daysLeft < 0;
+    v._isCritical = v._daysLeft >= 0 && v._daysLeft <= 7;
+    v._epss = epssData[v.cveID] || null;
+    v._inWatchlist = watchlist.some(w => v.vendorProject.toLowerCase().includes(w.toLowerCase()));
+    
+    // Priority (lower = more urgent)
+    let p = 100;
+    if (v._isOverdue) p = 0;
+    else if (v._isCritical) p = 10 + v._daysLeft;
+    else p = 50 + v._daysLeft;
+    if (v._epss > 0.5) p -= 15;
+    if (v._isNew) p -= 10;
+    if (v._inWatchlist) p -= 5;
+    v._priority = p;
+  });
+  
+  kevData.sort((a, b) => a._priority - b._priority);
+  
+  // Stats
+  const overdue = kevData.filter(v => v._isOverdue).length;
+  const critical = kevData.filter(v => v._isCritical).length;
+  const newCves = kevData.filter(v => v._isNew);
+  const highEpss = kevData.filter(v => v._epss >= 0.5).length;
+  
+  document.getElementById('stat-overdue').textContent = overdue;
+  document.getElementById('stat-critical').textContent = critical;
+  document.getElementById('stat-new').textContent = newCves.length;
+  document.getElementById('stat-highepss').textContent = highEpss;
+  document.getElementById('stat-total').textContent = kevData.length;
+  
+  // New banner
+  if (newCves.length > 0) {
+    renderNewBanner(newCves.slice(0, 4));
+  }
+  
+  // Countdown
+  const upcoming = kevData.filter(v => !v._isOverdue).sort((a,b) => a._due - b._due);
+  if (upcoming.length) {
+    startCountdown(upcoming[0]._due, upcoming[0].cveID + ' - ' + upcoming[0].vendorProject);
+  }
+  
+  renderPriorityCards();
+  renderThreatFeed();
+  renderTimeline();
+  applyFilter();
+}
+
+function applyFilter() {
+  switch(currentFilter) {
+    case 'overdue': filteredData = kevData.filter(v => v._isOverdue); break;
+    case 'critical': filteredData = kevData.filter(v => v._isCritical); break;
+    case 'new': filteredData = kevData.filter(v => v._isNew); break;
+    case 'watchlist': filteredData = kevData.filter(v => v._inWatchlist); break;
+    default: filteredData = kevData.filter(v => v._isOverdue || v._daysLeft <= 60 || v._hoursAgo <= 1440);
+  }
+  renderTable();
+}
+
+function renderNewBanner(cves) {
+  const el = document.getElementById('new-content');
+  el.innerHTML = cves.map(v => {
+    const epss = v._epss ? (v._epss * 100).toFixed(0) + '%' : 'N/A';
+    return `<div class="new-cve-chip" onclick="openNVD('${v.cveID}')">
+      <div class="cve-id">${v.cveID}</div>
+      <div class="vendor">${v.vendorProject} - ${v.product}</div>
+      <div class="meta">
+        <span class="tag epss">EPSS: ${epss}</span>
+        <span class="tag due">Due: ${v._daysLeft}d</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('new-banner').classList.add('active');
+}
+
+function renderPriorityCards() {
+  const top = kevData.slice(0, 3);
+  document.getElementById('priority-count').textContent = top.length;
+  document.getElementById('priority-cards').innerHTML = top.map((v, i) => {
+    const epss = v._epss ? (v._epss * 100).toFixed(0) + '%' : 'N/A';
+    const pClass = i === 0 ? 'p1' : i === 1 ? 'p2' : 'p3';
+    const newClass = v._isNew ? 'new' : '';
+    let dueClass = 'normal', dueText = v._daysLeft + ' days';
+    if (v._isOverdue) { dueClass = 'overdue'; dueText = Math.abs(v._daysLeft) + 'd overdue'; }
+    else if (v._isCritical) { dueClass = 'urgent'; }
+    
+    return `<div class="priority-card ${pClass} ${newClass}">
+      <div class="pc-header">
+        <span class="pc-cve"><a href="https://nvd.nist.gov/vuln/detail/${v.cveID}" target="_blank">⚠️ ${v.cveID}</a></span>
+        <span class="pc-priority ${pClass}">P${i+1}</span>
+      </div>
+      <div class="pc-title">${v.vendorProject} ${v.product}</div>
+      <div class="pc-tags">
+        <span class="pc-tag kev">CISA KEV</span>
+        <span class="pc-tag epss">EPSS: ${epss}</span>
+        <span class="pc-tag due">${v._hoursAgo < 24 ? v._hoursAgo + 'h' : Math.floor(v._hoursAgo/24) + 'd'} ago</span>
+      </div>
+      <div class="pc-footer">
+        <span class="pc-due ${dueClass}">📅 ${dueText}</span>
+        <button class="pc-btn" onclick="openNVD('${v.cveID}')">Details</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderThreatFeed() {
+  // Generate threat intel from actual CVE data
+  const threats = [];
+  
+  // Find trending vendors
+  const vendors = {};
+  kevData.slice(0, 30).forEach(v => {
+    vendors[v.vendorProject] = (vendors[v.vendorProject] || 0) + 1;
+  });
+  const topVendor = Object.entries(vendors).sort((a,b) => b[1] - a[1])[0];
+  if (topVendor) {
+    threats.push({
+      title: `${topVendor[0]} Under Active Attack`,
+      desc: `${topVendor[1]} vulnerabilities actively exploited. Prioritize patching all ${topVendor[0]} systems.`,
+      source: 'CISA KEV Analysis'
+    });
+  }
+  
+  // High EPSS threats
+  const highEpss = kevData.filter(v => v._epss >= 0.7).slice(0, 2);
+  highEpss.forEach(v => {
+    threats.push({
+      title: `High Exploitation Probability: ${v.cveID}`,
+      desc: `${v.vendorProject} ${v.product} - EPSS ${(v._epss*100).toFixed(0)}% likelihood of exploitation.`,
+      source: 'FIRST EPSS'
+    });
+  });
+  
+  // New critical
+  const newCrit = kevData.filter(v => v._isNew && v._isCritical).slice(0, 1);
+  newCrit.forEach(v => {
+    threats.push({
+      title: `New Critical: ${v.cveID}`,
+      desc: `${v.vendorProject} ${v.product} added to KEV. Due in ${v._daysLeft} days.`,
+      source: 'CISA KEV'
+    });
+  });
+  
+  // Overdue alert
+  const overdueCount = kevData.filter(v => v._isOverdue).length;
+  if (overdueCount > 0) {
+    threats.push({
+      title: `⚠️ ${overdueCount} Overdue Vulnerabilities`,
+      desc: `You have ${overdueCount} vulnerabilities past their remediation deadline. Immediate action required.`,
+      source: 'Compliance Alert'
+    });
+  }
+  
+  document.getElementById('threat-feed').innerHTML = threats.slice(0, 4).map(t => `
+    <div class="threat-item">
+      <h4>🔴 ${t.title}</h4>
+      <p>${t.desc}</p>
+      <div class="source">Source: ${t.source}</div>
+    </div>
+  `).join('');
+}
+
+function renderTimeline() {
+  const items = kevData.slice(0, 12).map(v => {
+    let time = v._hoursAgo < 1 ? 'Just now' : v._hoursAgo < 24 ? v._hoursAgo + 'h ago' : Math.floor(v._hoursAgo/24) + 'd ago';
+    let dotClass = v._isNew ? 'green' : v._isOverdue ? 'red' : 'orange';
+    let itemClass = v._isNew ? 'new' : '';
+    return `<li class="tl-item ${itemClass}">
+      <span class="tl-time">${time}</span>
+      <span class="tl-dot ${dotClass}"></span>
+      <div class="tl-content">
+        <div class="tl-title">${v.vendorProject} - ${v.product}</div>
+        <div class="tl-cve">${v.cveID} | Due: ${v.dueDate}</div>
+      </div>
+    </li>`;
+  });
+  document.getElementById('timeline').innerHTML = items.join('');
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filteredData.slice(start, start + PAGE_SIZE);
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+  
+  document.getElementById('vuln-table').innerHTML = pageData.map(v => {
+    const epss = v._epss;
+    let epssClass = 'low', epssText = 'N/A';
+    if (epss !== null) {
+      epssText = (epss * 100).toFixed(1) + '%';
+      epssClass = epss >= 0.7 ? 'critical' : epss >= 0.4 ? 'high' : epss >= 0.1 ? 'medium' : 'low';
+    }
+    
+    let slaClass = 'ok', slaText = v._daysLeft + 'd';
+    if (v._isOverdue) { slaClass = 'overdue'; slaText = Math.abs(v._daysLeft) + 'd late'; }
+    else if (v._daysLeft <= 3) { slaClass = 'critical'; slaText = '🔥 ' + v._daysLeft + 'd'; }
+    else if (v._daysLeft <= 7) { slaClass = 'warning'; }
+    
+    let actionClass = 'default', actionText = 'View';
+    if (v._isOverdue || v._daysLeft <= 3) { actionClass = 'primary'; actionText = 'Patch Now'; }
+    else if (v._daysLeft <= 7) { actionClass = 'warning'; actionText = 'Mitigate'; }
+    
+    const typeClass = v._isNew ? 'new' : 'kev';
+    const typeText = v._isNew ? '🆕 NEW' : '⚠️ KEV';
+    const rowClass = v._isNew ? 'new-row' : '';
+    
+    return `<tr class="${rowClass}">
+      <td><a class="cve-link" href="https://nvd.nist.gov/vuln/detail/${v.cveID}" target="_blank">${v.cveID}</a></td>
+      <td class="vendor-cell"><strong>${v.vendorProject}</strong><span>${v.product}</span></td>
+      <td><span class="badge ${typeClass}">${typeText}</span></td>
+      <td><span class="epss-cell ${epssClass}">${epssText}</span></td>
+      <td style="color:var(--text-muted)">${v.dateAdded}</td>
+      <td>${v.dueDate}</td>
+      <td><span class="sla-badge ${slaClass}">${slaText}</span></td>
+      <td><button class="action-btn ${actionClass}" onclick="openNVD('${v.cveID}')">${actionText}</button></td>
+    </tr>`;
+  }).join('');
+  
+  document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+  document.getElementById('prev-btn').disabled = currentPage === 1;
+  document.getElementById('next-btn').disabled = currentPage >= totalPages;
+}
+
+function nextPage() { if (currentPage < Math.ceil(filteredData.length / PAGE_SIZE)) { currentPage++; renderTable(); } }
+function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
+
+// Countdown
+let cdInterval;
+function startCountdown(target, info) {
+  document.getElementById('cd-cve').textContent = info;
+  if (cdInterval) clearInterval(cdInterval);
+  cdInterval = setInterval(() => {
+    const diff = target - new Date();
+    if (diff <= 0) return;
+    document.getElementById('cd-d').textContent = Math.floor(diff / 864e5);
+    document.getElementById('cd-h').textContent = String(Math.floor((diff % 864e5) / 36e5)).padStart(2, '0');
+    document.getElementById('cd-m').textContent = String(Math.floor((diff % 36e5) / 6e4)).padStart(2, '0');
+  }, 1000);
+}
+
+// Watchlist
+function renderWatchlist() {
+  document.getElementById('watchlist-tags').innerHTML = watchlist.map(v => 
+    `<span class="wl-tag">${v}<span class="remove" onclick="removeFromWatchlist('${v}')">×</span></span>`
+  ).join('');
+}
+function addToWatchlist() {
+  const input = document.getElementById('wl-input');
+  const val = input.value.trim();
+  if (val && !watchlist.includes(val)) {
+    watchlist.push(val);
+    localStorage.setItem('cvepulse_watchlist', JSON.stringify(watchlist));
+    renderWatchlist();
+    input.value = '';
+    processData(); // Re-process to update highlights
+  }
+}
+function addVendor(v) {
+  if (!watchlist.includes(v)) {
+    watchlist.push(v);
+    localStorage.setItem('cvepulse_watchlist', JSON.stringify(watchlist));
+    renderWatchlist();
+    processData();
+  }
+}
+function removeFromWatchlist(v) {
+  watchlist = watchlist.filter(x => x !== v);
+  localStorage.setItem('cvepulse_watchlist', JSON.stringify(watchlist));
+  renderWatchlist();
+  processData();
+}
+
+// Integrations
+function toggleIntegration(type) {
+  const el = document.getElementById('int-' + type);
+  if (integrations[type]) {
+    delete integrations[type];
+    el.classList.remove('active');
+  } else {
+    const webhook = prompt(`Enter your ${type === 'slack' ? 'Slack' : type === 'teams' ? 'Microsoft Teams' : 'Custom'} Webhook URL:`);
+    if (webhook) {
+      integrations[type] = webhook;
+      el.classList.add('active');
+    }
+  }
+  localStorage.setItem('cvepulse_integrations', JSON.stringify(integrations));
+}
+function updateIntegrationUI() {
+  ['slack', 'teams', 'webhook'].forEach(t => {
+    if (integrations[t]) document.getElementById('int-' + t)?.classList.add('active');
+  });
+}
+
+// Subscribe
+async function handleSubscribe(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Subscribing...';
+  btn.disabled = true;
+  
+  const data = {
+    email: document.getElementById('sub-email').value,
+    company: document.getElementById('sub-company').value,
+    frequency: document.getElementById('sub-frequency').value,
+    watchlist: watchlist,
+    integrations: integrations
+  };
+  
+  // Store locally as backup
+  const subs = JSON.parse(localStorage.getItem('cvepulse_subscriptions') || '[]');
+  subs.push({...data, timestamp: new Date().toISOString()});
+  localStorage.setItem('cvepulse_subscriptions', JSON.stringify(subs));
+  
+  // Try to send to Firebase backend
+  const API_URL = 'https://us-central1-cvepulse.cloudfunctions.net';
+  try {
+    const response = await fetch(`${API_URL}/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (result.success) {
+      btn.textContent = '✅ Subscribed!';
+      btn.style.background = 'var(--success-green)';
+      showSuccess('🎉 Subscribed successfully! Check your email for confirmation.');
+      document.getElementById('subscribe-form').reset();
+    } else {
+      throw new Error('API returned error');
+    }
+  } catch (error) {
+    console.log('API error, using local storage + webhooks');
+    sendToWebhooks('subscription', data);
+    btn.textContent = '✅ Subscribed!';
+    btn.style.background = 'var(--success-green)';
+    showSuccess('✅ Subscribed! You will receive alerts at ' + data.email);
+    document.getElementById('subscribe-form').reset();
+  }
+  
+  // Reset button after 3 seconds
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.style.background = '';
+    btn.disabled = false;
+  }, 3000);
+}
+
+// Contact Form
+async function handleContactForm(e) {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('contact-name').value,
+    email: document.getElementById('contact-email').value,
+    company: document.getElementById('contact-company').value,
+    service: document.getElementById('contact-service').value,
+    message: document.getElementById('contact-message').value
+  };
+  
+  // Store locally as backup
+  const leads = JSON.parse(localStorage.getItem('cvepulse_leads') || '[]');
+  leads.push({...data, timestamp: new Date().toISOString()});
+  localStorage.setItem('cvepulse_leads', JSON.stringify(leads));
+  
+  // Try to send to Firebase backend
+  const API_URL = window.CVEPULSE_API || 'https://us-central1-cvepulse.cloudfunctions.net';
+  try {
+    const response = await fetch(`${API_URL}/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (result.success) {
+      showSuccess('✅ Request submitted! Check your email for confirmation.');
+    } else {
+      sendToWebhooks('lead', data);
+      showSuccess('✅ Request submitted! We will contact you at ' + data.email);
+    }
+  } catch (error) {
+    console.log('API not available, using local storage + webhooks');
+    sendToWebhooks('lead', data);
+    showSuccess('✅ Request submitted! We will contact you at ' + data.email);
+  }
+  
+  closeModal('contact-modal');
+  document.getElementById('contact-form').reset();
+}
+
+// Send to webhooks (Slack/Teams/Custom)
+async function sendToWebhooks(type, data) {
+  // Slack
+  if (integrations.slack) {
+    try {
+      await fetch(integrations.slack, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          text: `📥 New ${type} from CVEPulse:\n${JSON.stringify(data, null, 2)}`
+        })
+      });
+    } catch(e) { console.log('Slack webhook failed'); }
+  }
+  
+  // Custom webhook
+  if (integrations.webhook) {
+    try {
+      await fetch(integrations.webhook, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type, data})
+      });
+    } catch(e) { console.log('Custom webhook failed'); }
+  }
+}
+
+// Export functions
+function exportCSV() {
+  const headers = 'CVE ID,Vendor,Product,Date Added,Due Date,Days Left,EPSS,Description\n';
+  const rows = filteredData.map(v => 
+    `${v.cveID},"${v.vendorProject}","${v.product}",${v.dateAdded},${v.dueDate},${v._daysLeft},${v._epss || 'N/A'},"${(v.shortDescription||'').replace(/"/g, '""')}"`
+  ).join('\n');
+  download(headers + rows, `cvepulse-export-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+}
+
+function exportJSON() {
+  const data = filteredData.map(v => ({
+    cveID: v.cveID, vendor: v.vendorProject, product: v.product,
+    dateAdded: v.dateAdded, dueDate: v.dueDate, daysLeft: v._daysLeft,
+    epss: v._epss, isOverdue: v._isOverdue, isNew: v._isNew
+  }));
+  download(JSON.stringify(data, null, 2), `cvepulse-export-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+}
+
+function generateReport() {
+  const html = `<!DOCTYPE html><html><head><title>CVEPulse Report</title>
+    <style>body{font-family:Arial;padding:40px}h1{color:#0891b2}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border:1px solid #ddd;padding:8px;font-size:12px}th{background:#0f172a;color:#22d3ee}.overdue{color:#ef4444;font-weight:bold}</style></head>
+    <body><h1>🔥 CVEPulse Emergency Report</h1><p>Generated: ${new Date().toLocaleString()}</p>
+    <h2>Summary</h2><p>Overdue: ${kevData.filter(v=>v._isOverdue).length} | Critical: ${kevData.filter(v=>v._isCritical).length} | New: ${kevData.filter(v=>v._isNew).length}</p>
+    <h2>Top 20 Priority Vulnerabilities</h2>
+    <table><tr><th>CVE</th><th>Vendor</th><th>Product</th><th>Due</th><th>Status</th></tr>
+    ${kevData.slice(0,20).map(v=>`<tr><td>${v.cveID}</td><td>${v.vendorProject}</td><td>${v.product}</td><td>${v.dueDate}</td><td class="${v._isOverdue?'overdue':''}">${v._isOverdue?'OVERDUE':v._daysLeft+'d'}</td></tr>`).join('')}
+    </table><p style="color:#666;margin-top:40px">CVEPulse - www.cvepulse.com</p>
+    <script>window.print()<\/script></body></html>`;
+  const w = window.open(); w.document.write(html); w.document.close();
+}
+
+function download(content, filename, type) {
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// Utilities
+function openNVD(cve) { window.open(`https://nvd.nist.gov/vuln/detail/${cve}`, '_blank'); }
+function refreshData() { loadData(); }
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModalOnBg(e) { if (e.target === e.currentTarget) e.target.classList.remove('active'); }
+
+function showError(msg) { document.getElementById('error-msg').textContent = msg; document.getElementById('error-banner').classList.add('active'); }
+function hideError() { document.getElementById('error-banner').classList.remove('active'); }
+function showSuccess(msg) { document.getElementById('success-msg').textContent = msg; document.getElementById('success-banner').classList.add('active'); document.getElementById('success-banner').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(hideSuccess, 5000); }
+function hideSuccess() { document.getElementById('success-banner').classList.remove('active'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "cvepulse-functions",
+  "version": "1.0.0",
+  "description": "CVEPulse Firebase Cloud Functions for alerts and lead capture",
+  "main": "index.js",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0",
+    "nodemailer": "^6.9.7",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0"
+  },
+  "private": true
+}
