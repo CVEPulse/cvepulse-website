@@ -9,7 +9,6 @@
  * - Slack/Teams webhook notifications
  * - Scheduled KEV checking
  * - KEV Data proxy (bypasses CORS)
- * - THREAT INTELLIGENCE ENDPOINTS (NEW)
  */
 
 const functions = require('firebase-functions');
@@ -45,7 +44,7 @@ const getEmailTransport = () => {
 
 const CISA_KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
 const FROM_EMAIL = 'alerts@cvepulse.com';
-const SITE_URL = 'https://www.cvepulse.com';
+const SITE_URL = 'https://cvepulse.web.app';
 
 // ============================================
 // API ENDPOINTS
@@ -96,28 +95,31 @@ exports.subscribe = functions.https.onRequest((req, res) => {
         integrations: integrations || {},
         active: true,
         createdAt: existing.exists ? existing.data().createdAt : admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastAlertSent: null
       };
       await db.collection('subscribers').doc(email).set(subscriberData, { merge: true });
       
-      const transport = getEmailTransport();
-      if (transport) {
-        try {
-          await transport.sendMail({
-            from: FROM_EMAIL,
-            to: email,
-            subject: '🔥 Welcome to CVEPulse Vulnerability Alerts',
-            html: generateWelcomeEmail(subscriberData)
-          });
-        } catch (emailError) {
-          console.error('Welcome email failed:', emailError);
-        }
+      const transporter = getEmailTransport();
+      if (transporter) {
+        await transporter.sendMail({
+          from: `CVEPulse Alerts <${FROM_EMAIL}>`,
+          to: email,
+          subject: '🔥 Welcome to CVEPulse Alerts',
+          html: generateWelcomeEmail(subscriberData)
+        });
       }
       
-      res.status(200).json({ success: true, message: 'Subscribed successfully' });
+      await db.collection('activity_log').add({
+        type: 'subscription',
+        email,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+      
+      return res.status(200).json({ success: true, message: 'Subscribed successfully', frequency: subscriberData.frequency });
     } catch (error) {
       console.error('Subscribe error:', error);
-      res.status(500).json({ error: 'Subscription failed' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 });
@@ -133,18 +135,23 @@ exports.unsubscribe = functions.https.onRequest((req, res) => {
     }
     try {
       const { email } = req.body;
-      if (!email) return res.status(400).json({ error: 'Email required' });
-      await db.collection('subscribers').doc(email).update({ active: false });
-      res.status(200).json({ success: true, message: 'Unsubscribed' });
+      if (!email) {
+        return res.status(400).json({ error: 'Email required' });
+      }
+      await db.collection('subscribers').doc(email).update({
+        active: false,
+        unsubscribedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return res.status(200).json({ success: true, message: 'Unsubscribed successfully' });
     } catch (error) {
       console.error('Unsubscribe error:', error);
-      res.status(500).json({ error: 'Unsubscribe failed' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 });
 
 /**
- * Capture consultation leads
+ * Submit lead/contact form
  * POST /lead
  */
 exports.lead = functions.https.onRequest((req, res) => {
@@ -154,320 +161,59 @@ exports.lead = functions.https.onRequest((req, res) => {
     }
     try {
       const { name, email, company, service, message } = req.body;
-      if (!email || !email.includes('@')) {
-        return res.status(400).json({ error: 'Valid email required' });
+      if (!email || !name) {
+        return res.status(400).json({ error: 'Name and email required' });
       }
-      
       const leadData = {
-        name: name || '',
-        email,
+        name, email,
         company: company || '',
         service: service || '',
         message: message || '',
         status: 'new',
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       };
+      const leadRef = await db.collection('leads').add(leadData);
       
-      await db.collection('leads').add(leadData);
-      
-      const transport = getEmailTransport();
-      if (transport) {
-        try {
-          await transport.sendMail({
-            from: FROM_EMAIL,
-            to: 'business@cvepulse.com',
-            subject: `🎯 New Lead: ${name || email} - ${service || 'General'}`,
-            html: generateLeadNotificationEmail(leadData)
-          });
-          await transport.sendMail({
-            from: FROM_EMAIL,
-            to: email,
-            subject: '✅ CVEPulse - Request Received',
-            html: generateLeadConfirmationEmail(leadData)
-          });
-        } catch (emailError) {
-          console.error('Lead email failed:', emailError);
-        }
+      const transporter = getEmailTransport();
+      if (transporter) {
+        const adminEmail = process.env.ADMIN_EMAIL || FROM_EMAIL;
+        await transporter.sendMail({
+          from: `CVEPulse <${FROM_EMAIL}>`,
+          to: adminEmail,
+          subject: `🎯 New Lead: ${company || name}`,
+          html: generateLeadNotificationEmail(leadData)
+        });
+        await transporter.sendMail({
+          from: `CVEPulse <${FROM_EMAIL}>`,
+          to: email,
+          subject: '✅ We received your request - CVEPulse',
+          html: generateLeadConfirmationEmail(leadData)
+        });
       }
-      
-      res.status(200).json({ success: true, message: 'Lead captured' });
+      return res.status(200).json({ success: true, message: 'Request submitted successfully', leadId: leadRef.id });
     } catch (error) {
-      console.error('Lead capture error:', error);
-      res.status(500).json({ error: 'Lead capture failed' });
+      console.error('Lead error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 });
 
 /**
- * Get stats for dashboard
+ * Get current KEV stats
  * GET /stats
  */
 exports.stats = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      const [subscribers, leads] = await Promise.all([
-        db.collection('subscribers').where('active', '==', true).get(),
-        db.collection('leads').get()
-      ]);
-      res.status(200).json({
-        subscribers: subscribers.size,
-        leads: leads.size,
-        timestamp: new Date().toISOString()
-      });
+      const statsDoc = await db.collection('kev_data').doc('latest_stats').get();
+      if (statsDoc.exists) {
+        return res.status(200).json(statsDoc.data());
+      }
+      const stats = await fetchAndProcessKEV();
+      return res.status(200).json(stats);
     } catch (error) {
       console.error('Stats error:', error);
-      res.status(500).json({ error: 'Failed to get stats' });
-    }
-  });
-});
-
-// ============================================
-// THREAT INTELLIGENCE ENDPOINTS
-// ============================================
-
-/**
- * Aggregated Threat Feed - combines multiple sources
- * GET /threatfeed
- */
-exports.threatfeed = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      console.log('Fetching aggregated threat feed...');
-      
-      // Fetch from multiple sources in parallel
-      const [threatfox, urlhaus, feodo, ransomware] = await Promise.allSettled([
-        // ThreatFox - IoCs from the last day
-        fetch('https://threatfox-api.abuse.ch/api/v1/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: 'get_iocs', days: 1 })
-        }).then(r => r.json()),
-        
-        // URLhaus - Recent malicious URLs
-        fetch('https://urlhaus-api.abuse.ch/v1/urls/recent/limit/100/')
-          .then(r => r.json()),
-        
-        // Feodo Tracker - Botnet C2 servers
-        fetch('https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json')
-          .then(r => r.json()),
-          
-        // Ransomware.live - Recent victims
-        fetch('https://api.ransomware.live/recentvictims')
-          .then(r => r.json())
-      ]);
-      
-      const feed = {
-        timestamp: new Date().toISOString(),
-        sources: {
-          threatfox: threatfox.status === 'fulfilled' ? threatfox.value : null,
-          urlhaus: urlhaus.status === 'fulfilled' ? urlhaus.value : null,
-          feodo: feodo.status === 'fulfilled' ? feodo.value : null,
-          ransomware: ransomware.status === 'fulfilled' ? ransomware.value : null
-        },
-        summary: {
-          threatfox_iocs: threatfox.status === 'fulfilled' ? (threatfox.value?.data?.length || 0) : 0,
-          malicious_urls: urlhaus.status === 'fulfilled' ? (urlhaus.value?.urls?.length || 0) : 0,
-          botnet_c2s: feodo.status === 'fulfilled' ? (Array.isArray(feodo.value) ? feodo.value.length : 0) : 0,
-          ransomware_victims: ransomware.status === 'fulfilled' ? (Array.isArray(ransomware.value) ? ransomware.value.length : 0) : 0
-        }
-      };
-      
-      console.log('Threat feed summary:', feed.summary);
-      res.status(200).json(feed);
-    } catch (error) {
-      console.error('Threat feed error:', error);
-      res.status(500).json({ error: 'Failed to fetch threat feed' });
-    }
-  });
-});
-
-/**
- * Ransomware Tracker - gang activity and victims
- * GET /ransomware
- */
-exports.ransomware = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      console.log('Fetching ransomware data...');
-      
-      const [victims, groups] = await Promise.allSettled([
-        fetch('https://api.ransomware.live/recentvictims').then(r => r.json()),
-        fetch('https://api.ransomware.live/groups').then(r => r.json())
-      ]);
-      
-      const data = {
-        timestamp: new Date().toISOString(),
-        recent_victims: victims.status === 'fulfilled' ? victims.value : [],
-        groups: groups.status === 'fulfilled' ? groups.value : [],
-        stats: {
-          total_victims_recent: victims.status === 'fulfilled' ? (Array.isArray(victims.value) ? victims.value.length : 0) : 0,
-          active_groups: groups.status === 'fulfilled' ? (Array.isArray(groups.value) ? groups.value.length : 0) : 0
-        }
-      };
-      
-      console.log('Ransomware stats:', data.stats);
-      res.status(200).json(data);
-    } catch (error) {
-      console.error('Ransomware data error:', error);
-      res.status(500).json({ error: 'Failed to fetch ransomware data' });
-    }
-  });
-});
-
-/**
- * IoC Lookup - search for IP, domain, hash, URL
- * POST /ioclookup { type: 'ip|domain|hash|url', value: '...' }
- */
-exports.ioclookup = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
-    
-    try {
-      const { type, value } = req.body;
-      if (!type || !value) {
-        return res.status(400).json({ error: 'Missing type or value' });
-      }
-      
-      console.log(`IoC lookup: ${type} = ${value}`);
-      
-      const results = { type, value, timestamp: new Date().toISOString(), sources: {} };
-      
-      // ThreatFox lookup
-      try {
-        const tfResponse = await fetch('https://threatfox-api.abuse.ch/api/v1/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: 'search_ioc', search_term: value })
-        });
-        const tfData = await tfResponse.json();
-        results.sources.threatfox = tfData;
-      } catch (e) {
-        results.sources.threatfox = { error: e.message };
-      }
-      
-      // URLhaus lookup for URLs/domains
-      if (type === 'url' || type === 'domain') {
-        try {
-          const endpoint = type === 'url' 
-            ? 'https://urlhaus-api.abuse.ch/v1/url/'
-            : 'https://urlhaus-api.abuse.ch/v1/host/';
-          const uhResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: type === 'url' ? `url=${encodeURIComponent(value)}` : `host=${encodeURIComponent(value)}`
-          });
-          const uhData = await uhResponse.json();
-          results.sources.urlhaus = uhData;
-        } catch (e) {
-          results.sources.urlhaus = { error: e.message };
-        }
-      }
-      
-      // MalwareBazaar lookup for hashes
-      if (type === 'hash') {
-        try {
-          const mbResponse = await fetch('https://mb-api.abuse.ch/api/v1/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `query=get_info&hash=${value}`
-          });
-          const mbData = await mbResponse.json();
-          results.sources.malwarebazaar = mbData;
-        } catch (e) {
-          results.sources.malwarebazaar = { error: e.message };
-        }
-      }
-      
-      res.status(200).json(results);
-    } catch (error) {
-      console.error('IoC lookup error:', error);
-      res.status(500).json({ error: 'IoC lookup failed' });
-    }
-  });
-});
-
-/**
- * Malware Feed - recent malware samples
- * GET /malware
- */
-exports.malware = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      console.log('Fetching malware feed...');
-      
-      const response = await fetch('https://mb-api.abuse.ch/api/v1/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'query=get_recent&selector=100'
-      });
-      
-      const data = await response.json();
-      
-      res.status(200).json({
-        timestamp: new Date().toISOString(),
-        samples: data.data || [],
-        count: data.data?.length || 0
-      });
-    } catch (error) {
-      console.error('Malware feed error:', error);
-      res.status(500).json({ error: 'Failed to fetch malware feed' });
-    }
-  });
-});
-
-/**
- * Botnet C2 Servers - Feodo Tracker data
- * GET /botnets
- */
-exports.botnets = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      console.log('Fetching botnet C2 data...');
-      
-      const [recommended, online] = await Promise.allSettled([
-        fetch('https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json').then(r => r.json()),
-        fetch('https://feodotracker.abuse.ch/downloads/ipblocklist.json').then(r => r.json())
-      ]);
-      
-      res.status(200).json({
-        timestamp: new Date().toISOString(),
-        recommended: recommended.status === 'fulfilled' ? recommended.value : [],
-        all: online.status === 'fulfilled' ? online.value : [],
-        stats: {
-          recommended_count: recommended.status === 'fulfilled' ? (Array.isArray(recommended.value) ? recommended.value.length : 0) : 0,
-          total_count: online.status === 'fulfilled' ? (Array.isArray(online.value) ? online.value.length : 0) : 0
-        }
-      });
-    } catch (error) {
-      console.error('Botnet data error:', error);
-      res.status(500).json({ error: 'Failed to fetch botnet data' });
-    }
-  });
-});
-
-/**
- * Threat Actors - APT and ransomware group information
- * GET /threatactors
- */
-exports.threatactors = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      console.log('Fetching threat actor data...');
-      
-      // Get ransomware groups from ransomware.live
-      const groupsResponse = await fetch('https://api.ransomware.live/groups');
-      const groups = await groupsResponse.json();
-      
-      res.status(200).json({
-        timestamp: new Date().toISOString(),
-        ransomware_groups: Array.isArray(groups) ? groups : [],
-        count: Array.isArray(groups) ? groups.length : 0
-      });
-    } catch (error) {
-      console.error('Threat actors error:', error);
-      res.status(500).json({ error: 'Failed to fetch threat actor data' });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 });
@@ -476,185 +222,178 @@ exports.threatactors = functions.https.onRequest((req, res) => {
 // SCHEDULED FUNCTIONS
 // ============================================
 
-/**
- * Check for new KEV entries every hour
- */
-exports.checkKEV = functions.pubsub.schedule('every 1 hours').onRun(async (context) => {
-  console.log('Running scheduled KEV check...');
-  
-  try {
-    const response = await fetch(CISA_KEV_URL);
-    const data = await response.json();
-    const vulnerabilities = data.vulnerabilities || [];
-    
-    const lastCheck = await db.collection('system').doc('lastKEVCheck').get();
-    const lastCheckTime = lastCheck.exists ? lastCheck.data().timestamp?.toDate() : new Date(0);
-    
-    const newCVEs = vulnerabilities.filter(v => {
-      const dateAdded = new Date(v.dateAdded);
-      return dateAdded > lastCheckTime;
-    });
-    
-    if (newCVEs.length > 0) {
-      console.log(`Found ${newCVEs.length} new CVEs`);
-      await alertImmediateSubscribers(newCVEs);
-    }
-    
-    await db.collection('system').doc('lastKEVCheck').set({
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      count: vulnerabilities.length,
-      newCount: newCVEs.length
-    });
-    
-    return null;
-  } catch (error) {
-    console.error('Scheduled KEV check error:', error);
-    return null;
-  }
-});
-
-/**
- * Daily digest at 8 AM EST
- */
-exports.dailyDigest = functions.pubsub.schedule('0 8 * * *').timeZone('America/New_York').onRun(async (context) => {
-  console.log('Sending daily digests...');
-  
-  try {
-    const response = await fetch(CISA_KEV_URL);
-    const data = await response.json();
-    const vulnerabilities = data.vulnerabilities || [];
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const last24h = vulnerabilities.filter(v => new Date(v.dateAdded) > yesterday);
-    const stats = calculateStats(vulnerabilities);
-    
-    const subscribers = await db.collection('subscribers')
-      .where('active', '==', true)
-      .where('frequency', '==', 'daily')
-      .get();
-    
-    const transport = getEmailTransport();
-    if (!transport) return null;
-    
-    for (const doc of subscribers.docs) {
-      const sub = doc.data();
-      try {
-        await transport.sendMail({
-          from: FROM_EMAIL,
-          to: sub.email,
-          subject: `📊 CVEPulse Daily Digest - ${last24h.length} New CVEs`,
-          html: generateDailyDigestEmail(sub, vulnerabilities, last24h, stats)
-        });
-      } catch (e) {
-        console.error(`Failed to send daily digest to ${sub.email}:`, e);
+exports.checkKEV = functions.pubsub
+  .schedule('every 1 hours')
+  .timeZone('America/New_York')
+  .onRun(async (context) => {
+    console.log('Running scheduled KEV check...');
+    try {
+      const { newCVEs, stats } = await fetchAndProcessKEV();
+      if (newCVEs.length > 0) {
+        console.log(`Found ${newCVEs.length} new CVEs, sending immediate alerts...`);
+        await sendImmediateAlerts(newCVEs);
       }
+      await db.collection('kev_data').doc('latest_stats').set({
+        ...stats,
+        lastChecked: admin.firestore.FieldValue.serverTimestamp()
+      });
+      return null;
+    } catch (error) {
+      console.error('KEV check error:', error);
+      return null;
     }
-    
-    return null;
-  } catch (error) {
-    console.error('Daily digest error:', error);
-    return null;
-  }
-});
+  });
 
-/**
- * Weekly summary on Mondays at 9 AM EST
- */
-exports.weeklySummary = functions.pubsub.schedule('0 9 * * 1').timeZone('America/New_York').onRun(async (context) => {
-  console.log('Sending weekly summaries...');
-  
-  try {
-    const response = await fetch(CISA_KEV_URL);
-    const data = await response.json();
-    const vulnerabilities = data.vulnerabilities || [];
-    
-    const lastWeek = new Date();
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    
-    const last7d = vulnerabilities.filter(v => new Date(v.dateAdded) > lastWeek);
-    const stats = calculateStats(vulnerabilities);
-    
-    const subscribers = await db.collection('subscribers')
-      .where('active', '==', true)
-      .where('frequency', '==', 'weekly')
-      .get();
-    
-    const transport = getEmailTransport();
-    if (!transport) return null;
-    
-    for (const doc of subscribers.docs) {
-      const sub = doc.data();
-      try {
-        await transport.sendMail({
-          from: FROM_EMAIL,
-          to: sub.email,
-          subject: `📈 CVEPulse Weekly Summary - ${last7d.length} New CVEs This Week`,
-          html: generateWeeklySummaryEmail(sub, vulnerabilities, last7d, stats)
-        });
-      } catch (e) {
-        console.error(`Failed to send weekly summary to ${sub.email}:`, e);
+exports.dailyDigest = functions.pubsub
+  .schedule('0 8 * * *')
+  .timeZone('America/New_York')
+  .onRun(async (context) => {
+    console.log('Sending daily digest...');
+    try {
+      const subscribers = await db.collection('subscribers')
+        .where('active', '==', true)
+        .where('frequency', '==', 'daily')
+        .get();
+      if (subscribers.empty) return null;
+      
+      const { kevData, stats } = await fetchAndProcessKEV();
+      const last24h = kevData.filter(v => {
+        const added = new Date(v.dateAdded);
+        return (new Date() - added) / 36e5 <= 24;
+      });
+      
+      const transporter = getEmailTransport();
+      if (!transporter) return null;
+      
+      for (const doc of subscribers.docs) {
+        const sub = doc.data();
+        try {
+          await transporter.sendMail({
+            from: `CVEPulse Alerts <${FROM_EMAIL}>`,
+            to: sub.email,
+            subject: `📊 CVEPulse Daily Digest - ${stats.total} Active KEVs`,
+            html: generateDailyDigestEmail(sub, kevData, last24h, stats)
+          });
+          await doc.ref.update({ lastAlertSent: admin.firestore.FieldValue.serverTimestamp() });
+        } catch (e) {
+          console.error(`Failed to send to ${sub.email}:`, e);
+        }
       }
+      return null;
+    } catch (error) {
+      console.error('Daily digest error:', error);
+      return null;
     }
-    
-    return null;
-  } catch (error) {
-    console.error('Weekly summary error:', error);
-    return null;
-  }
-});
+  });
+
+exports.weeklySummary = functions.pubsub
+  .schedule('0 9 * * 1')
+  .timeZone('America/New_York')
+  .onRun(async (context) => {
+    console.log('Sending weekly summary...');
+    try {
+      const subscribers = await db.collection('subscribers')
+        .where('active', '==', true)
+        .where('frequency', '==', 'weekly')
+        .get();
+      if (subscribers.empty) return null;
+      
+      const { kevData, stats } = await fetchAndProcessKEV();
+      const last7d = kevData.filter(v => {
+        const added = new Date(v.dateAdded);
+        return (new Date() - added) / 864e5 <= 7;
+      });
+      
+      const transporter = getEmailTransport();
+      if (!transporter) return null;
+      
+      for (const doc of subscribers.docs) {
+        const sub = doc.data();
+        try {
+          await transporter.sendMail({
+            from: `CVEPulse Alerts <${FROM_EMAIL}>`,
+            to: sub.email,
+            subject: `📈 CVEPulse Weekly Summary - ${last7d.length} New CVEs`,
+            html: generateWeeklySummaryEmail(sub, kevData, last7d, stats)
+          });
+          await doc.ref.update({ lastAlertSent: admin.firestore.FieldValue.serverTimestamp() });
+        } catch (e) {
+          console.error(`Failed to send to ${sub.email}:`, e);
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Weekly summary error:', error);
+      return null;
+    }
+  });
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-function calculateStats(vulnerabilities) {
-  const now = new Date();
-  let overdue = 0, critical = 0;
+async function fetchAndProcessKEV() {
+  const response = await fetch(CISA_KEV_URL);
+  const data = await response.json();
+  const kevData = data.vulnerabilities || [];
   
-  vulnerabilities.forEach(v => {
-    const dueDate = new Date(v.dueDate);
-    const daysLeft = Math.ceil((dueDate - now) / 864e5);
+  const now = new Date();
+  let newCVEs = [];
+  let overdue = 0, critical = 0, newCount = 0;
+  
+  const lastKnownDoc = await db.collection('kev_data').doc('known_cves').get();
+  const knownCVEs = lastKnownDoc.exists ? lastKnownDoc.data().cves || [] : [];
+  
+  kevData.forEach(v => {
+    const due = new Date(v.dueDate);
+    const added = new Date(v.dateAdded);
+    const daysLeft = Math.ceil((due - now) / 864e5);
+    const hoursAgo = Math.floor((now - added) / 36e5);
+    
     if (daysLeft < 0) overdue++;
-    if (daysLeft <= 7 && daysLeft >= 0) critical++;
+    if (daysLeft >= 0 && daysLeft <= 7) critical++;
+    if (hoursAgo <= 24) newCount++;
+    
+    if (!knownCVEs.includes(v.cveID)) {
+      newCVEs.push({ ...v, _daysLeft: daysLeft, _hoursAgo: hoursAgo });
+    }
   });
   
-  return { total: vulnerabilities.length, overdue, critical };
+  await db.collection('kev_data').doc('known_cves').set({
+    cves: kevData.map(v => v.cveID),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  
+  return { kevData, newCVEs, stats: { total: kevData.length, overdue, critical, newLast24h: newCount, newDetected: newCVEs.length } };
 }
 
-async function alertImmediateSubscribers(newCVEs) {
+async function sendImmediateAlerts(newCVEs) {
   const subscribers = await db.collection('subscribers')
     .where('active', '==', true)
     .where('frequency', '==', 'immediate')
     .get();
+  if (subscribers.empty) return;
   
-  const transport = getEmailTransport();
+  const transporter = getEmailTransport();
+  if (!transporter) return;
   
   for (const doc of subscribers.docs) {
     const sub = doc.data();
-    
     let relevantCVEs = newCVEs;
     if (sub.watchlist?.length > 0) {
-      relevantCVEs = newCVEs.filter(cve => 
-        sub.watchlist.some(w => 
-          cve.vendorProject?.toLowerCase().includes(w.toLowerCase()) ||
-          cve.product?.toLowerCase().includes(w.toLowerCase())
-        )
+      relevantCVEs = newCVEs.filter(v => 
+        sub.watchlist.some(w => v.vendorProject.toLowerCase().includes(w.toLowerCase()))
       );
     }
-    
     if (relevantCVEs.length === 0) continue;
     
     try {
-      if (transport) {
-        await transport.sendMail({
-          from: FROM_EMAIL,
-          to: sub.email,
-          subject: `🚨 URGENT: ${relevantCVEs.length} New CISA KEV Vulnerabilities`,
-          html: generateImmediateAlertEmail(sub, relevantCVEs)
-        });
-      }
+      await transporter.sendMail({
+        from: `CVEPulse Alerts <${FROM_EMAIL}>`,
+        to: sub.email,
+        subject: `🚨 URGENT: ${relevantCVEs.length} New CVE${relevantCVEs.length > 1 ? 's' : ''} Added to CISA KEV`,
+        html: generateImmediateAlertEmail(sub, relevantCVEs)
+      });
       
       if (sub.integrations?.slack) await sendSlackAlert(sub.integrations.slack, relevantCVEs);
       if (sub.integrations?.teams) await sendTeamsAlert(sub.integrations.teams, relevantCVEs);
@@ -739,12 +478,7 @@ function generateLeadConfirmationEmail(lead) {
   return `<!DOCTYPE html><html><head><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333}.container{max-width:600px;margin:0 auto;padding:20px}.header{background:linear-gradient(135deg,#0891b2,#22d3ee);color:white;padding:30px;text-align:center;border-radius:8px 8px 0 0}.content{background:#f9fafb;padding:30px;border:1px solid #e5e7eb}.footer{background:#1f2937;color:#9ca3af;padding:20px;text-align:center;font-size:12px;border-radius:0 0 8px 8px}</style></head><body><div class="container"><div class="header"><h1>✅ Request Received</h1></div><div class="content"><p>Hi ${lead.name},</p><p>Thank you for your interest in CVEPulse services. We've received your consultation request and will be in touch within 24-48 hours.</p><p><strong>What you requested:</strong> ${lead.service || 'General consultation'}</p><p>In the meantime, feel free to explore our live vulnerability dashboard at <a href="${SITE_URL}/dashboard.html">cvepulse.com/dashboard</a></p><p>Best regards,<br>The CVEPulse Team</p></div><div class="footer"><p>CVEPulse - Real-Time Vulnerability Intelligence</p></div></div></body></html>`;
 }
 
-// ============================================
-// EXPORTS
-// ============================================
-
 module.exports = {
-  // Original endpoints
   kevdata: exports.kevdata,
   subscribe: exports.subscribe,
   unsubscribe: exports.unsubscribe,
@@ -752,12 +486,5 @@ module.exports = {
   stats: exports.stats,
   checkKEV: exports.checkKEV,
   dailyDigest: exports.dailyDigest,
-  weeklySummary: exports.weeklySummary,
-  // Threat Intelligence endpoints
-  threatfeed: exports.threatfeed,
-  ransomware: exports.ransomware,
-  ioclookup: exports.ioclookup,
-  malware: exports.malware,
-  botnets: exports.botnets,
-  threatactors: exports.threatactors
+  weeklySummary: exports.weeklySummary
 };

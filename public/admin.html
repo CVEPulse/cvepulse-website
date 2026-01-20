@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVEPulse Admin - Subscribers & Leads</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:rgba(30,41,59,0.95);
+      --cyan:#22d3ee;--purple:#a855f7;--green:#22c55e;--red:#ef4444;--orange:#f97316;
+      --text-primary:#fff;--text-secondary:#cbd5e1;--text-muted:#64748b;
+      --border:rgba(148,163,184,0.2);
+    }
+    body{font-family:'Inter',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;padding:20px}
+    .container{max-width:1400px;margin:0 auto}
+    
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+    h1{font-size:24px;font-weight:800;color:var(--purple)}
+    .header-actions{display:flex;gap:10px}
+    .btn{padding:10px 18px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;border:none;transition:all .2s}
+    .btn-primary{background:var(--purple);color:#fff}
+    .btn-primary:hover{background:#9333ea}
+    .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
+    .btn-outline:hover{border-color:var(--cyan);color:var(--cyan)}
+    .btn-danger{background:var(--red);color:#fff}
+    
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    @media(max-width:800px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+    .stat-value{font-size:36px;font-weight:800;margin-bottom:4px}
+    .stat-value.purple{color:var(--purple)}
+    .stat-value.cyan{color:var(--cyan)}
+    .stat-value.green{color:var(--green)}
+    .stat-value.orange{color:var(--orange)}
+    .stat-label{font-size:12px;color:var(--text-muted);text-transform:uppercase}
+    
+    .tabs{display:flex;gap:8px;margin-bottom:20px}
+    .tab{padding:12px 24px;font-size:14px;font-weight:600;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-secondary);cursor:pointer}
+    .tab:hover{border-color:var(--purple);color:var(--text-primary)}
+    .tab.active{background:var(--purple);border-color:var(--purple);color:#fff}
+    
+    .panel{display:none}
+    .panel.active{display:block}
+    
+    .section{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .section-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
+    .section-header h2{font-size:16px;font-weight:700}
+    .section-header .count{background:var(--purple);color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700}
+    
+    .data-table{width:100%;border-collapse:collapse}
+    .data-table th{padding:12px 16px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;text-align:left;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)}
+    .data-table td{padding:14px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+    .data-table tr:hover{background:rgba(168,85,247,0.05)}
+    
+    .badge{display:inline-block;padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px}
+    .badge.active{background:rgba(34,197,94,0.15);color:var(--green)}
+    .badge.inactive{background:rgba(239,68,68,0.15);color:var(--red)}
+    .badge.immediate{background:rgba(239,68,68,0.15);color:var(--red)}
+    .badge.daily{background:rgba(249,115,22,0.15);color:var(--orange)}
+    .badge.weekly{background:rgba(34,211,238,0.15);color:var(--cyan)}
+    .badge.new{background:rgba(168,85,247,0.15);color:var(--purple)}
+    .badge.contacted{background:rgba(34,197,94,0.15);color:var(--green)}
+    
+    .email-link{color:var(--cyan);text-decoration:none}
+    .email-link:hover{text-decoration:underline}
+    
+    .actions{display:flex;gap:6px}
+    .action-btn{padding:6px 10px;font-size:11px;background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;cursor:pointer}
+    .action-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+    
+    .loading{text-align:center;padding:60px;color:var(--text-muted)}
+    .empty{text-align:center;padding:60px;color:var(--text-muted)}
+    
+    .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+    .login-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:400px;width:100%;text-align:center}
+    .login-box h2{font-size:24px;margin-bottom:8px;color:var(--purple)}
+    .login-box p{font-size:14px;color:var(--text-muted);margin-bottom:24px}
+    .login-box input{width:100%;padding:14px 16px;font-size:14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);margin-bottom:16px}
+    .login-box input:focus{outline:none;border-color:var(--purple)}
+    .login-box button{width:100%;padding:14px;font-size:14px;font-weight:700;background:var(--purple);border:none;border-radius:8px;color:#fff;cursor:pointer}
+    .login-error{color:var(--red);font-size:13px;margin-bottom:16px}
+    
+    .hidden{display:none !important}
+    
+    .export-dropdown{position:relative;display:inline-block}
+    .export-menu{display:none;position:absolute;right:0;top:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;margin-top:4px}
+    .export-menu.active{display:block}
+    .export-menu button{display:block;width:100%;padding:12px 16px;font-size:13px;text-align:left;background:none;border:none;color:var(--text-secondary);cursor:pointer}
+    .export-menu button:hover{background:rgba(168,85,247,0.1);color:var(--text-primary)}
+    
+    @media(max-width:768px){
+      .data-table{font-size:12px}
+      .data-table th,.data-table td{padding:10px 8px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <h2>🔐 CVEPulse Admin</h2>
+      <p>Enter admin password to access subscriber and lead data</p>
+      <div class="login-error hidden" id="login-error">Incorrect password</div>
+      <form onsubmit="handleLogin(event)">
+        <input type="password" id="admin-password" placeholder="Admin Password" required>
+        <button type="submit">Access Dashboard</button>
+      </form>
+      <p style="margin-top:20px;font-size:11px;color:var(--text-muted)">Default: cvepulse2024</p>
+    </div>
+  </div>
+  
+  <!-- Admin Dashboard -->
+  <div class="container hidden" id="admin-dashboard">
+    <header>
+      <h1>🛡️ CVEPulse Admin Dashboard</h1>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="refreshData()">↻ Refresh</button>
+        <div class="export-dropdown">
+          <button class="btn btn-primary" onclick="toggleExportMenu()">📥 Export</button>
+          <div class="export-menu" id="export-menu">
+            <button onclick="exportSubscribersCSV()">📄 Subscribers CSV</button>
+            <button onclick="exportLeadsCSV()">📄 Leads CSV</button>
+            <button onclick="exportAllJSON()">📋 All Data JSON</button>
+          </div>
+        </div>
+        <button class="btn btn-outline" onclick="logout()">Logout</button>
+      </div>
+    </header>
+    
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value purple" id="total-subscribers">--</div>
+        <div class="stat-label">Total Subscribers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value green" id="active-subscribers">--</div>
+        <div class="stat-label">Active Subscribers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value cyan" id="total-leads">--</div>
+        <div class="stat-label">Total Leads</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value orange" id="new-leads">--</div>
+        <div class="stat-label">New Leads (7d)</div>
+      </div>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="subscribers">📧 Subscribers</button>
+      <button class="tab" data-tab="leads">🎯 Leads</button>
+    </div>
+    
+    <div class="panel active" id="panel-subscribers">
+      <div class="section">
+        <div class="section-header">
+          <h2>📧 Email Subscribers</h2>
+          <span class="count" id="subscribers-count">0</span>
+        </div>
+        <div id="subscribers-table">
+          <div class="loading">Loading subscribers...</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel" id="panel-leads">
+      <div class="section">
+        <div class="section-header">
+          <h2>🎯 Consultation Leads</h2>
+          <span class="count" id="leads-count">0</span>
+        </div>
+        <div id="leads-table">
+          <div class="loading">Loading leads...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA5rcGl03i0IcOp4OTbGGiqNJIDLpbkxcY",
+  authDomain: "cvepulse.firebaseapp.com",
+  projectId: "cvepulse",
+  storageBucket: "cvepulse.firebasestorage.app",
+  messagingSenderId: "761372009568",
+  appId: "1:761372009568:web:1d8dd800b2d5a163700f05",
+  measurementId: "G-ZK8N8C60RP"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Simple password protection (change this!)
+const ADMIN_PASSWORD = 'cvepulse2024';
+
+let subscribersData = [];
+let leadsData = [];
+
+// ============================================
+// AUTHENTICATION
+// ============================================
+function handleLogin(e) {
+  e.preventDefault();
+  const password = document.getElementById('admin-password').value;
+  
+  if (password === ADMIN_PASSWORD) {
+    sessionStorage.setItem('cvepulse_admin', 'true');
+    showDashboard();
+  } else {
+    document.getElementById('login-error').classList.remove('hidden');
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('cvepulse_admin');
+  location.reload();
+}
+
+function showDashboard() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('admin-dashboard').classList.remove('hidden');
+  initTabs();
+  loadAllData();
+}
+
+// Check if already logged in
+if (sessionStorage.getItem('cvepulse_admin') === 'true') {
+  showDashboard();
+}
+
+// ============================================
+// TABS
+// ============================================
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
+}
+
+// ============================================
+// DATA LOADING
+// ============================================
+async function loadAllData() {
+  await Promise.all([loadSubscribers(), loadLeads()]);
+}
+
+function refreshData() {
+  loadAllData();
+}
+
+async function loadSubscribers() {
+  try {
+    const snapshot = await db.collection('subscribers').orderBy('createdAt', 'desc').get();
+    subscribersData = [];
+    
+    snapshot.forEach(doc => {
+      subscribersData.push({ id: doc.id, ...doc.data() });
+    });
+    
+    renderSubscribers();
+    updateStats();
+  } catch (error) {
+    console.error('Error loading subscribers:', error);
+    document.getElementById('subscribers-table').innerHTML = '<div class="empty">Failed to load. Check Firebase config.</div>';
+  }
+}
+
+async function loadLeads() {
+  try {
+    const snapshot = await db.collection('leads').orderBy('createdAt', 'desc').get();
+    leadsData = [];
+    
+    snapshot.forEach(doc => {
+      leadsData.push({ id: doc.id, ...doc.data() });
+    });
+    
+    renderLeads();
+    updateStats();
+  } catch (error) {
+    console.error('Error loading leads:', error);
+    document.getElementById('leads-table').innerHTML = '<div class="empty">Failed to load. Check Firebase config.</div>';
+  }
+}
+
+// ============================================
+// RENDERING
+// ============================================
+function updateStats() {
+  const activeCount = subscribersData.filter(s => s.active !== false).length;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const newLeads = leadsData.filter(l => l.createdAt?.toDate?.() > sevenDaysAgo).length;
+  
+  document.getElementById('total-subscribers').textContent = subscribersData.length;
+  document.getElementById('active-subscribers').textContent = activeCount;
+  document.getElementById('total-leads').textContent = leadsData.length;
+  document.getElementById('new-leads').textContent = newLeads;
+  document.getElementById('subscribers-count').textContent = subscribersData.length;
+  document.getElementById('leads-count').textContent = leadsData.length;
+}
+
+function renderSubscribers() {
+  const container = document.getElementById('subscribers-table');
+  
+  if (subscribersData.length === 0) {
+    container.innerHTML = '<div class="empty">No subscribers yet</div>';
+    return;
+  }
+  
+  let html = `<table class="data-table">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Company</th>
+        <th>Frequency</th>
+        <th>Watchlist</th>
+        <th>Status</th>
+        <th>Subscribed</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  subscribersData.forEach(sub => {
+    const date = sub.createdAt?.toDate?.() ? sub.createdAt.toDate().toLocaleDateString() : 'Unknown';
+    const watchlist = Array.isArray(sub.watchlist) ? sub.watchlist.join(', ') : (sub.watchlist || '-');
+    const isActive = sub.active !== false;
+    
+    html += `<tr>
+      <td><a href="mailto:${sub.email}" class="email-link">${sub.email}</a></td>
+      <td>${sub.company || '-'}</td>
+      <td><span class="badge ${sub.frequency || 'daily'}">${sub.frequency || 'daily'}</span></td>
+      <td>${watchlist || '-'}</td>
+      <td><span class="badge ${isActive ? 'active' : 'inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+      <td>${date}</td>
+      <td class="actions">
+        <button class="action-btn" onclick="copyEmail('${sub.email}')">📋 Copy</button>
+        <button class="action-btn" onclick="toggleSubscriber('${sub.email}', ${!isActive})">${isActive ? '🚫' : '✅'}</button>
+      </td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function renderLeads() {
+  const container = document.getElementById('leads-table');
+  
+  if (leadsData.length === 0) {
+    container.innerHTML = '<div class="empty">No leads yet</div>';
+    return;
+  }
+  
+  let html = `<table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Company</th>
+        <th>Service</th>
+        <th>Message</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  
+  leadsData.forEach(lead => {
+    const date = lead.createdAt?.toDate?.() ? lead.createdAt.toDate().toLocaleDateString() : 'Unknown';
+    const status = lead.status || 'new';
+    const message = lead.message ? (lead.message.length > 50 ? lead.message.substring(0, 50) + '...' : lead.message) : '-';
+    
+    html += `<tr>
+      <td>${lead.name || '-'}</td>
+      <td><a href="mailto:${lead.email}" class="email-link">${lead.email}</a></td>
+      <td>${lead.company || '-'}</td>
+      <td>${lead.service || '-'}</td>
+      <td title="${lead.message || ''}">${message}</td>
+      <td><span class="badge ${status}">${status}</span></td>
+      <td>${date}</td>
+      <td class="actions">
+        <button class="action-btn" onclick="copyEmail('${lead.email}')">📋</button>
+        <button class="action-btn" onclick="updateLeadStatus('${lead.id}', 'contacted')">✅</button>
+      </td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ============================================
+// ACTIONS
+// ============================================
+function copyEmail(email) {
+  navigator.clipboard.writeText(email);
+  alert('Email copied: ' + email);
+}
+
+async function toggleSubscriber(email, newStatus) {
+  try {
+    await db.collection('subscribers').doc(email).update({ active: newStatus });
+    loadSubscribers();
+  } catch (error) {
+    alert('Error updating subscriber');
+  }
+}
+
+async function updateLeadStatus(leadId, status) {
+  try {
+    await db.collection('leads').doc(leadId).update({ status: status });
+    loadLeads();
+  } catch (error) {
+    alert('Error updating lead');
+  }
+}
+
+// ============================================
+// EXPORT
+// ============================================
+function toggleExportMenu() {
+  document.getElementById('export-menu').classList.toggle('active');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.export-dropdown')) {
+    document.getElementById('export-menu').classList.remove('active');
+  }
+});
+
+function exportSubscribersCSV() {
+  let csv = 'Email,Company,Frequency,Watchlist,Sector,Status,Subscribed Date\n';
+  subscribersData.forEach(s => {
+    const date = s.createdAt?.toDate?.() ? s.createdAt.toDate().toISOString() : '';
+    const watchlist = Array.isArray(s.watchlist) ? s.watchlist.join(';') : (s.watchlist || '');
+    csv += `"${s.email}","${s.company || ''}","${s.frequency || 'daily'}","${watchlist}","${s.sector || ''}","${s.active !== false ? 'active' : 'inactive'}","${date}"\n`;
+  });
+  download(csv, 'cvepulse-subscribers.csv', 'text/csv');
+}
+
+function exportLeadsCSV() {
+  let csv = 'Name,Email,Company,Service,Message,Status,Date\n';
+  leadsData.forEach(l => {
+    const date = l.createdAt?.toDate?.() ? l.createdAt.toDate().toISOString() : '';
+    const message = (l.message || '').replace(/"/g, '""');
+    csv += `"${l.name || ''}","${l.email}","${l.company || ''}","${l.service || ''}","${message}","${l.status || 'new'}","${date}"\n`;
+  });
+  download(csv, 'cvepulse-leads.csv', 'text/csv');
+}
+
+function exportAllJSON() {
+  const data = { subscribers: subscribersData, leads: leadsData, exportedAt: new Date().toISOString() };
+  download(JSON.stringify(data, null, 2), 'cvepulse-all-data.json', 'application/json');
+}
+
+function download(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+</script>
+</body>
+</html>
