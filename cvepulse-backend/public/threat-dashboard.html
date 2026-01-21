@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVEPulse - CISO Threat Intelligence Command Center</title>
+  <meta name="description" content="Enterprise threat intelligence platform for CISOs. Real-time ransomware tracking, sector-specific threats, MITRE ATT&CK mapping, and actionable security recommendations.">
+  <link rel="canonical" href="https://www.cvepulse.com/threat-dashboard.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/threat-dashboard.css">
+</head>
+<body>
+  <div class="ambient-bg"></div>
+  <div class="grid-overlay"></div>
+  
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <a href="https://www.cvepulse.com" class="logo">
+        <div class="logo-icon">🛡️</div>
+        <div>
+          <div class="logo-text">CVEPulse</div>
+          <div class="logo-tag">Threat Intelligence</div>
+        </div>
+      </a>
+      
+      <div class="header-center">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          LIVE FEED
+        </div>
+        <span class="update-time" id="last-update">Loading...</span>
+      </div>
+      
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-ghost">CVE Dashboard</a>
+        <button class="btn btn-ghost" onclick="exportData()">📥 Export</button>
+        <button class="btn btn-primary" onclick="openModal('subscribe-modal')">🔔 Subscribe</button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- Executive Threat Level Banner -->
+    <section class="threat-banner" id="threat-banner">
+      <div class="threat-level-display">
+        <div class="threat-ring">
+          <svg viewBox="0 0 120 120" width="120" height="120">
+            <circle class="threat-ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle class="threat-ring-value medium" cx="60" cy="60" r="52" 
+                    stroke-dasharray="327" stroke-dashoffset="163" id="threat-ring-progress"></circle>
+          </svg>
+          <div class="threat-score">
+            <span class="threat-score-value" id="threat-score">--</span>
+            <span class="threat-score-label">Risk Score</span>
+          </div>
+        </div>
+        <div class="threat-level-label medium" id="threat-level">LOADING</div>
+      </div>
+      
+      <div class="threat-summary" id="summary-stats">
+        <div class="summary-stat">
+          <div class="summary-value red" id="stat-ransomware-24h">--</div>
+          <div class="summary-label">Ransomware Victims (24h)</div>
+          <div class="summary-trend up" id="trend-ransomware">↑ Loading</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-value orange" id="stat-ransomware-7d">--</div>
+          <div class="summary-label">Ransomware (7 days)</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-value blue" id="stat-iocs">--</div>
+          <div class="summary-label">Active IoCs</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-value purple" id="stat-kev">--</div>
+          <div class="summary-label">New KEV CVEs (7d)</div>
+        </div>
+      </div>
+      
+      <div class="threat-recommendations" id="recommendations">
+        <h4>🎯 Priority Actions</h4>
+        <div class="rec-item urgent" id="rec-1">
+          <span class="rec-icon">⚡</span>
+          <span>Loading recommendations...</span>
+        </div>
+        <div class="rec-item high" id="rec-2">
+          <span class="rec-icon">🔒</span>
+          <span>Loading...</span>
+        </div>
+        <div class="rec-item medium" id="rec-3">
+          <span class="rec-icon">📋</span>
+          <span>Loading...</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-panel="trending" onclick="switchPanel('trending')">
+        <span>🔥</span> Trending
+        <span class="badge" id="badge-trending">--</span>
+      </button>
+      <button class="nav-tab" data-panel="ransomware" onclick="switchPanel('ransomware')">
+        <span>💀</span> Ransomware
+        <span class="badge" id="badge-ransomware">--</span>
+      </button>
+      <button class="nav-tab" data-panel="actors" onclick="switchPanel('actors')">
+        <span>🎭</span> Threat Actors
+        <span class="badge" id="badge-actors">--</span>
+      </button>
+      <button class="nav-tab" data-panel="sectors" onclick="switchPanel('sectors')">
+        <span>🏢</span> By Sector
+      </button>
+      <button class="nav-tab" data-panel="ioc" onclick="switchPanel('ioc')">
+        <span>🔍</span> IoC Lookup
+      </button>
+      <button class="nav-tab" data-panel="geo" onclick="switchPanel('geo')">
+        <span>🌍</span> Geographic
+      </button>
+    </nav>
+    
+    <!-- Panel: Trending Threats -->
+    <div class="panel active" id="panel-trending">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="icon">🦠</span> Trending Malware</h3>
+            <span class="card-badge">7 Days</span>
+          </div>
+          <div class="card-body" id="trending-malware">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="icon">💀</span> Active Ransomware Groups</h3>
+            <span class="card-badge">7 Days</span>
+          </div>
+          <div class="card-body" id="trending-ransomware">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+          <h3 class="card-title"><span class="icon">🌐</span> URL Threat Distribution</h3>
+        </div>
+        <div class="card-body" id="trending-urls">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel: Ransomware -->
+    <div class="panel" id="panel-ransomware">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span class="icon">💀</span> Recent Ransomware Victims</h3>
+          <div class="card-controls">
+            <button class="btn btn-ghost" onclick="refreshRansomware()">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding: 0;" id="ransomware-table">
+          <div class="loading"><div class="spinner"></div>Loading ransomware data...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel: Threat Actors -->
+    <div class="panel" id="panel-actors">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span class="icon">🎭</span> Active Threat Actors</h3>
+          <span class="card-badge" id="active-actors-count">Loading...</span>
+        </div>
+        <div class="actor-grid" id="actors-grid">
+          <div class="loading"><div class="spinner"></div>Loading threat actors...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel: Sectors -->
+    <div class="panel" id="panel-sectors">
+      <div class="sector-selector" id="sector-selector">
+        <button class="sector-btn active" data-sector="all" onclick="selectSector('all')">All Sectors</button>
+        <button class="sector-btn" data-sector="healthcare" onclick="selectSector('healthcare')">🏥 Healthcare</button>
+        <button class="sector-btn" data-sector="finance" onclick="selectSector('finance')">🏦 Finance</button>
+        <button class="sector-btn" data-sector="technology" onclick="selectSector('technology')">💻 Technology</button>
+        <button class="sector-btn" data-sector="manufacturing" onclick="selectSector('manufacturing')">🏭 Manufacturing</button>
+        <button class="sector-btn" data-sector="energy" onclick="selectSector('energy')">⚡ Energy</button>
+        <button class="sector-btn" data-sector="government" onclick="selectSector('government')">🏛️ Government</button>
+        <button class="sector-btn" data-sector="education" onclick="selectSector('education')">🎓 Education</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title" id="sector-title"><span class="icon">🏢</span> All Sectors - Threat Analysis</h3>
+          <span class="card-badge" id="sector-risk">Risk: --</span>
+        </div>
+        <div class="card-body" id="sector-data">
+          <div class="loading"><div class="spinner"></div>Loading sector data...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel: IoC Lookup -->
+    <div class="panel" id="panel-ioc">
+      <div class="search-section">
+        <h3 style="text-align:center; margin-bottom: 16px; font-size: 18px;">🔍 Indicator of Compromise Lookup</h3>
+        <p style="text-align:center; color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">
+          Search IPs, domains, URLs, or file hashes against ThreatFox, URLhaus, and MalwareBazaar
+        </p>
+        <div class="search-form">
+          <div class="search-input-group">
+            <select class="search-select" id="ioc-type">
+              <option value="ip">IP Address</option>
+              <option value="domain">Domain</option>
+              <option value="url">URL</option>
+              <option value="hash">File Hash</option>
+            </select>
+            <input type="text" class="search-input" id="ioc-value" placeholder="Enter IoC value...">
+          </div>
+          <button class="search-btn" onclick="lookupIoC()">Search</button>
+        </div>
+        <div class="search-results" id="ioc-results"></div>
+      </div>
+    </div>
+    
+    <!-- Panel: Geographic -->
+    <div class="panel" id="panel-geo">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="icon">🎯</span> Victim Countries</h3>
+          </div>
+          <div class="card-body" id="geo-victims">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span class="icon">☠️</span> C2 Server Locations</h3>
+          </div>
+          <div class="card-body" id="geo-c2">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- MODALS -->
+  <div class="modal-overlay" id="subscribe-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">🔔 Subscribe to Threat Alerts</h3>
+        <button class="modal-close" onclick="closeModal('subscribe-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="subscribe-form" onsubmit="handleSubscribe(event)">
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" class="form-input" id="sub-email" required placeholder="ciso@company.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company Name</label>
+            <input type="text" class="form-input" id="sub-company" placeholder="Your organization">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Industry Sector</label>
+            <select class="form-select" id="sub-sector">
+              <option value="general">All Sectors</option>
+              <option value="healthcare">Healthcare / Pharma</option>
+              <option value="finance">Finance / Banking</option>
+              <option value="technology">Technology</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="energy">Energy / Utilities</option>
+              <option value="government">Government</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alert Frequency</label>
+            <select class="form-select" id="sub-frequency">
+              <option value="immediate">Immediate (Critical Only)</option>
+              <option value="daily" selected>Daily Digest</option>
+              <option value="weekly">Weekly Summary</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;" id="sub-btn">
+            Subscribe to Alerts
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal-overlay" id="contact-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">💼 Request Consultation</h3>
+        <button class="modal-close" onclick="closeModal('contact-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="contact-form" onsubmit="handleContact(event)">
+          <div class="form-group">
+            <label class="form-label">Name *</label>
+            <input type="text" class="form-input" id="contact-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-input" id="contact-email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company</label>
+            <input type="text" class="form-input" id="contact-company">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Service Interest</label>
+            <select class="form-select" id="contact-service">
+              <option value="threat-intel">Threat Intelligence Services</option>
+              <option value="vm-program">Vulnerability Management</option>
+              <option value="incident-response">Incident Response</option>
+              <option value="security-assessment">Security Assessment</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-textarea" id="contact-message" placeholder="Tell us about your needs..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+  
+  <!-- FOOTER -->
+  <footer>
+    <p><strong><a href="https://www.cvepulse.com">CVEPulse</a></strong> - Enterprise Threat Intelligence Platform</p>
+    <p style="margin-top: 6px;">Data sources: Abuse.ch (ThreatFox, URLhaus, Feodo, MalwareBazaar), Ransomware.live, CISA KEV</p>
+    <p style="margin-top: 6px;">Auto-refreshes every 5 minutes | © 2026 CVEPulse</p>
+  </footer>
+  
+  <script src="js/threat-dashboard.js"></script>
+</body>
+</html>

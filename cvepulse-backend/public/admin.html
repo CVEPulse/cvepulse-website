@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVEPulse Admin - Subscriber & Lead Management</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-void: #05080f;
+      --bg-deep: #0a1018;
+      --bg-surface: #111a28;
+      --bg-elevated: #162232;
+      --bg-hover: #1d2d42;
+      
+      --border-subtle: rgba(99, 138, 183, 0.12);
+      --border-medium: rgba(99, 138, 183, 0.25);
+      --border-accent: rgba(59, 178, 255, 0.4);
+      
+      --text-primary: #f0f4f8;
+      --text-secondary: #94a8be;
+      --text-muted: #5c7089;
+      
+      --accent-blue: #3bb2ff;
+      --accent-cyan: #00e5cc;
+      --accent-purple: #a78bfa;
+      --accent-green: #22c55e;
+      --accent-orange: #ff8c42;
+      --accent-red: #ff3d57;
+      
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+    
+    body {
+      font-family: var(--font-display);
+      background: var(--bg-void);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    
+    /* Login Screen */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .login-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .login-box h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    
+    .login-box p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    
+    .login-input {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-family: var(--font-mono);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      text-align: center;
+      letter-spacing: 4px;
+    }
+    
+    .login-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+    
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border: none;
+      border-radius: 8px;
+      color: var(--bg-void);
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .login-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .login-error {
+      color: var(--accent-red);
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    /* Dashboard */
+    .dashboard {
+      display: none;
+    }
+    
+    .dashboard.active {
+      display: block;
+    }
+    
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .logo-tag {
+      font-size: 11px;
+      color: var(--accent-orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-medium);
+    }
+    
+    .btn-ghost:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-accent);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: var(--bg-void);
+    }
+    
+    .btn-danger {
+      background: var(--accent-red);
+      color: white;
+    }
+    
+    main {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      line-height: 1.2;
+    }
+    
+    .stat-value.blue { color: var(--accent-blue); }
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.purple { color: var(--accent-purple); }
+    .stat-value.orange { color: var(--accent-orange); }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-surface);
+      padding: 6px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-subtle);
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .tab:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      color: var(--bg-void);
+    }
+    
+    .tab .badge {
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+    }
+    
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .filter-select {
+      padding: 8px 12px;
+      font-size: 13px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: 6px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+    
+    .search-input {
+      padding: 8px 14px;
+      font-size: 13px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: 6px;
+      color: var(--text-primary);
+      min-width: 250px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+    
+    /* Table */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(0,0,0,0.2);
+    }
+    
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th {
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: left;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+    
+    .data-table tr:hover {
+      background: var(--bg-hover);
+    }
+    
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Tags */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    
+    .tag.cve {
+      background: rgba(59, 178, 255, 0.15);
+      color: var(--accent-blue);
+    }
+    
+    .tag.threat {
+      background: rgba(167, 139, 250, 0.15);
+      color: var(--accent-purple);
+    }
+    
+    .tag.immediate {
+      background: rgba(255, 61, 87, 0.15);
+      color: var(--accent-red);
+    }
+    
+    .tag.daily {
+      background: rgba(255, 140, 66, 0.15);
+      color: var(--accent-orange);
+    }
+    
+    .tag.weekly {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+    }
+    
+    .tag.active {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+    }
+    
+    .tag.inactive {
+      background: rgba(92, 112, 137, 0.15);
+      color: var(--text-muted);
+    }
+    
+    /* Sector tags */
+    .tag.healthcare { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .tag.finance { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+    .tag.technology { background: rgba(59, 178, 255, 0.15); color: var(--accent-blue); }
+    .tag.manufacturing { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+    .tag.energy { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+    .tag.government { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
+    .tag.education { background: rgba(45, 212, 191, 0.15); color: #2dd4bf; }
+    .tag.general { background: rgba(148, 168, 190, 0.15); color: var(--text-secondary); }
+    
+    .email-link {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+    
+    .email-link:hover {
+      text-decoration: underline;
+    }
+    
+    .timestamp {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    
+    /* Panel */
+    .panel {
+      display: none;
+    }
+    
+    .panel.active {
+      display: block;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* Loading */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-subtle);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      z-index: 3000;
+    }
+    
+    .toast {
+      padding: 14px 20px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .toast.success { border-left: 3px solid var(--accent-green); }
+    .toast.error { border-left: 3px solid var(--accent-red); }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-inner {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .filters {
+        flex-direction: column;
+      }
+      
+      .search-input {
+        width: 100%;
+        min-width: auto;
+      }
+      
+      .data-table {
+        font-size: 12px;
+      }
+      
+      .data-table th, .data-table td {
+        padding: 10px 8px;
+      }
+    }
+    
+    /* Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.9);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: 16px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 24px;
+      border-radius: 6px;
+    }
+    
+    .modal-close:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    
+    .modal-body {
+      padding: 24px;
+    }
+    
+    .detail-row {
+      display: flex;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      width: 140px;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    
+    .detail-value {
+      flex: 1;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+      <h1>CVEPulse Admin</h1>
+      <p>Enter admin password to access subscriber data</p>
+      <input type="password" class="login-input" id="password-input" placeholder="••••••" maxlength="20">
+      <button class="login-btn" onclick="attemptLogin()">Access Dashboard</button>
+      <p class="login-error" id="login-error">Invalid password. Try again.</p>
+    </div>
+  </div>
+  
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <header>
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">🛡️</div>
+          <div>
+            <div class="logo-text">CVEPulse Admin</div>
+            <div class="logo-tag">Subscriber Management</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
+          <button class="btn btn-ghost" onclick="exportSubscribers()">📥 Export CSV</button>
+          <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value blue" id="stat-total-subs">--</div>
+          <div class="stat-label">Total Subscribers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green" id="stat-active-subs">--</div>
+          <div class="stat-label">Active Subscribers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value purple" id="stat-total-leads">--</div>
+          <div class="stat-label">Total Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value orange" id="stat-today">--</div>
+          <div class="stat-label">New Today</div>
+        </div>
+      </div>
+      
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-tab="subscribers" onclick="switchTab('subscribers')">
+          👥 Subscribers
+          <span class="badge" id="badge-subs">--</span>
+        </button>
+        <button class="tab" data-tab="leads" onclick="switchTab('leads')">
+          🎯 Leads
+          <span class="badge" id="badge-leads">--</span>
+        </button>
+      </div>
+      
+      <!-- Subscribers Panel -->
+      <div class="panel active" id="panel-subscribers">
+        <div class="filters">
+          <div class="filter-group">
+            <span class="filter-label">Source:</span>
+            <select class="filter-select" id="filter-source" onchange="filterSubscribers()">
+              <option value="all">All Sources</option>
+              <option value="cve-dashboard">CVE Dashboard</option>
+              <option value="threat-dashboard">Threat Intel Dashboard</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Frequency:</span>
+            <select class="filter-select" id="filter-frequency" onchange="filterSubscribers()">
+              <option value="all">All Frequencies</option>
+              <option value="immediate">Immediate</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Sector:</span>
+            <select class="filter-select" id="filter-sector" onchange="filterSubscribers()">
+              <option value="all">All Sectors</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="finance">Finance</option>
+              <option value="technology">Technology</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="energy">Energy</option>
+              <option value="government">Government</option>
+              <option value="education">Education</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Status:</span>
+            <select class="filter-select" id="filter-status" onchange="filterSubscribers()">
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <input type="text" class="search-input" id="search-subs" placeholder="🔍 Search email or company..." oninput="filterSubscribers()">
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📧 Subscribers</h3>
+            <span id="subs-count" style="color: var(--text-muted); font-size: 13px;">Loading...</span>
+          </div>
+          <div id="subscribers-table">
+            <div class="loading"><div class="spinner"></div>Loading subscribers...</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Leads Panel -->
+      <div class="panel" id="panel-leads">
+        <div class="filters">
+          <div class="filter-group">
+            <span class="filter-label">Service:</span>
+            <select class="filter-select" id="filter-service" onchange="filterLeads()">
+              <option value="all">All Services</option>
+              <option value="threat-intel">Threat Intelligence</option>
+              <option value="vm-program">Vulnerability Management</option>
+              <option value="incident-response">Incident Response</option>
+              <option value="security-assessment">Security Assessment</option>
+            </select>
+          </div>
+          <input type="text" class="search-input" id="search-leads" placeholder="🔍 Search name, email or company..." oninput="filterLeads()">
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🎯 Leads</h3>
+            <span id="leads-count" style="color: var(--text-muted); font-size: 13px;">Loading...</span>
+          </div>
+          <div id="leads-table">
+            <div class="loading"><div class="spinner"></div>Loading leads...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detail-modal" onclick="closeModalOnBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Details</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const ADMIN_PASSWORD = 'cvepulse2026'; // Change this!
+    
+    // Firebase config - replace with your actual config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "cvepulse.firebaseapp.com",
+      projectId: "cvepulse",
+      storageBucket: "cvepulse.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    
+    // Data storage
+    let allSubscribers = [];
+    let allLeads = [];
+    let filteredSubscribers = [];
+    let filteredLeads = [];
+    
+    // ============================================
+    // AUTHENTICATION
+    // ============================================
+    function attemptLogin() {
+      const password = document.getElementById('password-input').value;
+      if (password === ADMIN_PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').classList.add('active');
+        sessionStorage.setItem('cvepulse_admin', 'true');
+        loadAllData();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        document.getElementById('password-input').value = '';
+      }
+    }
+    
+    function logout() {
+      sessionStorage.removeItem('cvepulse_admin');
+      location.reload();
+    }
+    
+    // Check session on load
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('cvepulse_admin') === 'true') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').classList.add('active');
+        loadAllData();
+      }
+      
+      // Enter key for login
+      document.getElementById('password-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') attemptLogin();
+      });
+    });
+    
+    // ============================================
+    // DATA LOADING
+    // ============================================
+    async function loadAllData() {
+      await Promise.all([loadSubscribers(), loadLeads()]);
+      updateStats();
+    }
+    
+    async function loadSubscribers() {
+      try {
+        const snapshot = await db.collection('subscribers').orderBy('createdAt', 'desc').get();
+        allSubscribers = [];
+        snapshot.forEach(doc => {
+          allSubscribers.push({ id: doc.id, ...doc.data() });
+        });
+        filteredSubscribers = [...allSubscribers];
+        renderSubscribers();
+        document.getElementById('badge-subs').textContent = allSubscribers.length;
+      } catch (err) {
+        console.error('Error loading subscribers:', err);
+        document.getElementById('subscribers-table').innerHTML = '<div class="empty-state">Failed to load subscribers. Check Firebase config.</div>';
+      }
+    }
+    
+    async function loadLeads() {
+      try {
+        const snapshot = await db.collection('leads').orderBy('createdAt', 'desc').get();
+        allLeads = [];
+        snapshot.forEach(doc => {
+          allLeads.push({ id: doc.id, ...doc.data() });
+        });
+        filteredLeads = [...allLeads];
+        renderLeads();
+        document.getElementById('badge-leads').textContent = allLeads.length;
+      } catch (err) {
+        console.error('Error loading leads:', err);
+        document.getElementById('leads-table').innerHTML = '<div class="empty-state">Failed to load leads. Check Firebase config.</div>';
+      }
+    }
+    
+    function refreshData() {
+      document.getElementById('subscribers-table').innerHTML = '<div class="loading"><div class="spinner"></div>Refreshing...</div>';
+      document.getElementById('leads-table').innerHTML = '<div class="loading"><div class="spinner"></div>Refreshing...</div>';
+      loadAllData();
+      showToast('Data refreshed!', 'success');
+    }
+    
+    // ============================================
+    // STATS
+    // ============================================
+    function updateStats() {
+      const activeSubs = allSubscribers.filter(s => s.active !== false).length;
+      const today = new Date().toDateString();
+      const newToday = allSubscribers.filter(s => {
+        const created = s.createdAt?.toDate?.() || new Date(s.createdAt);
+        return created.toDateString() === today;
+      }).length + allLeads.filter(l => {
+        const created = l.createdAt?.toDate?.() || new Date(l.createdAt);
+        return created.toDateString() === today;
+      }).length;
+      
+      document.getElementById('stat-total-subs').textContent = allSubscribers.length;
+      document.getElementById('stat-active-subs').textContent = activeSubs;
+      document.getElementById('stat-total-leads').textContent = allLeads.length;
+      document.getElementById('stat-today').textContent = newToday;
+    }
+    
+    // ============================================
+    // RENDERING
+    // ============================================
+    function renderSubscribers() {
+      const el = document.getElementById('subscribers-table');
+      
+      if (filteredSubscribers.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No subscribers found</p></div>';
+        document.getElementById('subs-count').textContent = '0 subscribers';
+        return;
+      }
+      
+      let html = `<table class="data-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Company</th>
+            <th>Source</th>
+            <th>Sector</th>
+            <th>Frequency</th>
+            <th>Status</th>
+            <th>Subscribed</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      
+      filteredSubscribers.forEach(sub => {
+        const source = sub.source || 'cve-dashboard';
+        const sourceTag = source.includes('threat') ? 'threat' : 'cve';
+        const sourceLabel = source.includes('threat') ? 'Threat Intel' : 'CVE Dashboard';
+        
+        const sector = sub.sector || 'general';
+        const frequency = sub.frequency || 'daily';
+        const active = sub.active !== false;
+        
+        const created = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
+        const dateStr = created.toLocaleDateString();
+        
+        html += `<tr>
+          <td><a href="mailto:${escapeHtml(sub.email)}" class="email-link">${escapeHtml(sub.email)}</a></td>
+          <td>${escapeHtml(sub.company) || '<span style="color:var(--text-muted)">—</span>'}</td>
+          <td><span class="tag ${sourceTag}">${sourceLabel}</span></td>
+          <td><span class="tag ${sector}">${capitalize(sector)}</span></td>
+          <td><span class="tag ${frequency}">${capitalize(frequency)}</span></td>
+          <td><span class="tag ${active ? 'active' : 'inactive'}">${active ? 'Active' : 'Inactive'}</span></td>
+          <td class="timestamp">${dateStr}</td>
+          <td>
+            <button class="btn btn-ghost" style="padding:6px 10px;font-size:11px;" onclick="viewSubscriber('${sub.id}')">View</button>
+          </td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table>';
+      el.innerHTML = html;
+      document.getElementById('subs-count').textContent = `${filteredSubscribers.length} subscribers`;
+    }
+    
+    function renderLeads() {
+      const el = document.getElementById('leads-table');
+      
+      if (filteredLeads.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No leads found</p></div>';
+        document.getElementById('leads-count').textContent = '0 leads';
+        return;
+      }
+      
+      let html = `<table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Company</th>
+            <th>Service Interest</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      
+      filteredLeads.forEach(lead => {
+        const created = lead.createdAt?.toDate?.() || new Date(lead.createdAt);
+        const dateStr = created.toLocaleDateString();
+        
+        const serviceLabels = {
+          'threat-intel': 'Threat Intelligence',
+          'vm-program': 'Vulnerability Mgmt',
+          'incident-response': 'Incident Response',
+          'security-assessment': 'Security Assessment'
+        };
+        
+        html += `<tr>
+          <td><strong>${escapeHtml(lead.name)}</strong></td>
+          <td><a href="mailto:${escapeHtml(lead.email)}" class="email-link">${escapeHtml(lead.email)}</a></td>
+          <td>${escapeHtml(lead.company) || '<span style="color:var(--text-muted)">—</span>'}</td>
+          <td>${serviceLabels[lead.service] || lead.service || '—'}</td>
+          <td class="timestamp">${dateStr}</td>
+          <td>
+            <button class="btn btn-ghost" style="padding:6px 10px;font-size:11px;" onclick="viewLead('${lead.id}')">View</button>
+          </td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table>';
+      el.innerHTML = html;
+      document.getElementById('leads-count').textContent = `${filteredLeads.length} leads`;
+    }
+    
+    // ============================================
+    // FILTERING
+    // ============================================
+    function filterSubscribers() {
+      const source = document.getElementById('filter-source').value;
+      const frequency = document.getElementById('filter-frequency').value;
+      const sector = document.getElementById('filter-sector').value;
+      const status = document.getElementById('filter-status').value;
+      const search = document.getElementById('search-subs').value.toLowerCase();
+      
+      filteredSubscribers = allSubscribers.filter(sub => {
+        // Source filter
+        if (source !== 'all') {
+          const subSource = sub.source || 'cve-dashboard';
+          if (!subSource.includes(source.split('-')[0])) return false;
+        }
+        
+        // Frequency filter
+        if (frequency !== 'all' && sub.frequency !== frequency) return false;
+        
+        // Sector filter
+        if (sector !== 'all' && (sub.sector || 'general') !== sector) return false;
+        
+        // Status filter
+        if (status === 'active' && sub.active === false) return false;
+        if (status === 'inactive' && sub.active !== false) return false;
+        
+        // Search filter
+        if (search) {
+          const text = `${sub.email} ${sub.company || ''}`.toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+        
+        return true;
+      });
+      
+      renderSubscribers();
+    }
+    
+    function filterLeads() {
+      const service = document.getElementById('filter-service').value;
+      const search = document.getElementById('search-leads').value.toLowerCase();
+      
+      filteredLeads = allLeads.filter(lead => {
+        // Service filter
+        if (service !== 'all' && lead.service !== service) return false;
+        
+        // Search filter
+        if (search) {
+          const text = `${lead.name} ${lead.email} ${lead.company || ''}`.toLowerCase();
+          if (!text.includes(search)) return false;
+        }
+        
+        return true;
+      });
+      
+      renderLeads();
+    }
+    
+    // ============================================
+    // DETAIL VIEWS
+    // ============================================
+    function viewSubscriber(id) {
+      const sub = allSubscribers.find(s => s.id === id);
+      if (!sub) return;
+      
+      const created = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
+      const updated = sub.updatedAt?.toDate?.() || null;
+      
+      document.getElementById('modal-title').textContent = '👤 Subscriber Details';
+      document.getElementById('modal-body').innerHTML = `
+        <div class="detail-row">
+          <div class="detail-label">Email</div>
+          <div class="detail-value"><a href="mailto:${escapeHtml(sub.email)}" class="email-link">${escapeHtml(sub.email)}</a></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Company</div>
+          <div class="detail-value">${escapeHtml(sub.company) || '—'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Source</div>
+          <div class="detail-value">${sub.source || 'cve-dashboard'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Sector</div>
+          <div class="detail-value">${capitalize(sub.sector || 'general')}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Frequency</div>
+          <div class="detail-value">${capitalize(sub.frequency || 'daily')}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Status</div>
+          <div class="detail-value"><span class="tag ${sub.active !== false ? 'active' : 'inactive'}">${sub.active !== false ? 'Active' : 'Inactive'}</span></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Watchlist</div>
+          <div class="detail-value">${(sub.watchlist || []).join(', ') || '—'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Subscribed</div>
+          <div class="detail-value">${created.toLocaleString()}</div>
+        </div>
+        ${updated ? `<div class="detail-row">
+          <div class="detail-label">Last Updated</div>
+          <div class="detail-value">${updated.toLocaleString()}</div>
+        </div>` : ''}
+      `;
+      
+      document.getElementById('detail-modal').classList.add('active');
+    }
+    
+    function viewLead(id) {
+      const lead = allLeads.find(l => l.id === id);
+      if (!lead) return;
+      
+      const created = lead.createdAt?.toDate?.() || new Date(lead.createdAt);
+      
+      const serviceLabels = {
+        'threat-intel': 'Threat Intelligence Services',
+        'vm-program': 'Vulnerability Management',
+        'incident-response': 'Incident Response',
+        'security-assessment': 'Security Assessment'
+      };
+      
+      document.getElementById('modal-title').textContent = '🎯 Lead Details';
+      document.getElementById('modal-body').innerHTML = `
+        <div class="detail-row">
+          <div class="detail-label">Name</div>
+          <div class="detail-value"><strong>${escapeHtml(lead.name)}</strong></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Email</div>
+          <div class="detail-value"><a href="mailto:${escapeHtml(lead.email)}" class="email-link">${escapeHtml(lead.email)}</a></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Company</div>
+          <div class="detail-value">${escapeHtml(lead.company) || '—'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Service Interest</div>
+          <div class="detail-value">${serviceLabels[lead.service] || lead.service || '—'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Message</div>
+          <div class="detail-value">${escapeHtml(lead.message) || '—'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Source</div>
+          <div class="detail-value">${lead.source || 'website'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Submitted</div>
+          <div class="detail-value">${created.toLocaleString()}</div>
+        </div>
+      `;
+      
+      document.getElementById('detail-modal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('detail-modal').classList.remove('active');
+    }
+    
+    function closeModalOnBg(e) {
+      if (e.target.classList.contains('modal-overlay')) {
+        closeModal();
+      }
+    }
+    
+    // ============================================
+    // EXPORT
+    // ============================================
+    function exportSubscribers() {
+      let csv = 'Email,Company,Source,Sector,Frequency,Status,Subscribed\n';
+      
+      filteredSubscribers.forEach(sub => {
+        const created = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
+        csv += `"${sub.email}","${sub.company || ''}","${sub.source || 'cve-dashboard'}","${sub.sector || 'general'}","${sub.frequency || 'daily'}","${sub.active !== false ? 'Active' : 'Inactive'}","${created.toISOString()}"\n`;
+      });
+      
+      downloadFile(csv, `cvepulse-subscribers-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      showToast('Subscribers exported!', 'success');
+    }
+    
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+    
+    // ============================================
+    // UI HELPERS
+    // ============================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tabId}`));
+    }
+    
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
