@@ -3,730 +3,287 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CVEPulse - Threat Intelligence Dashboard | Live Cyber Threat Monitoring</title>
-  <meta name="description" content="Real-time threat intelligence dashboard with ransomware tracking, IoC lookup, malware feeds, and botnet C2 monitoring. Free threat intel for security leaders.">
-  <meta name="keywords" content="threat intelligence, ransomware tracker, IoC lookup, malware feed, botnet C2, cyber threats, APT groups, threat actors">
+  <title>CVEPulse - Threat Intelligence Command Center</title>
+  <meta name="description" content="Enterprise threat intelligence platform. Real-time threat posture, enriched indicators, campaign detection, and actionable security recommendations.">
   <link rel="canonical" href="https://www.cvepulse.com/threat-dashboard.html">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{
-      --bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:rgba(30,41,59,0.95);
-      --cyan:#22d3ee;--cyan-dark:#0891b2;--cyan-glow:rgba(34,211,238,0.3);
-      --purple:#a855f7;--emergency-red:#ef4444;--warning-orange:#f97316;
-      --warning-yellow:#eab308;--success-green:#22c55e;
-      --text-primary:#fff;--text-secondary:#cbd5e1;--text-muted:#64748b;
-      --border:rgba(148,163,184,0.2);--border-cyan:rgba(34,211,238,0.3);
-    }
-    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--bg-primary) 0%,#1a2744 50%,var(--bg-primary) 100%);color:var(--text-primary);min-height:100vh;line-height:1.5}
-    .top-glow{position:fixed;top:0;left:0;right:0;height:120px;background:linear-gradient(180deg,rgba(168,85,247,0.12) 0%,transparent 100%);pointer-events:none;z-index:0}
-    
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-    
-    header{background:rgba(15,23,42,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:12px 24px;position:sticky;top:0;z-index:100}
-    .header-inner{max-width:1600px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-    .logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
-    .logo h1{font-size:18px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:1.5px;font-style:italic}
-    .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .live-indicator{display:flex;align-items:center;gap:6px;padding:5px 10px;background:rgba(34,197,94,0.15);border:1px solid var(--success-green);border-radius:16px;font-size:10px;color:var(--success-green);font-weight:600}
-    .live-dot{width:6px;height:6px;background:var(--success-green);border-radius:50%;animation:pulse 1.5s infinite}
-    .refresh-info{font-size:10px;color:var(--text-muted)}
-    .btn{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
-    .btn-outline{background:transparent;border:1px solid var(--text-muted);color:var(--text-secondary)}
-    .btn-outline:hover{border-color:var(--cyan);color:var(--cyan)}
-    .btn-primary{background:linear-gradient(135deg,var(--cyan-dark),var(--cyan));color:#000}
-    .btn-cta{background:linear-gradient(135deg,var(--purple),#c084fc);color:#fff}
-    
-    .container{max-width:1600px;margin:0 auto;padding:16px 20px;position:relative;z-index:1}
-    
-    .alert-banner{display:none;border-radius:8px;padding:12px 16px;margin-bottom:12px;animation:slideIn 0.4s}
-    .alert-banner.active{display:flex;align-items:center;gap:10px}
-    .alert-banner.error{background:rgba(239,68,68,0.2);border:1px solid var(--emergency-red)}
-    .alert-banner.success{background:rgba(34,197,94,0.2);border:1px solid var(--success-green)}
-    .alert-banner p{font-size:12px;flex:1}
-    .alert-banner .close-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px}
-    
-    .stats-banner{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
-    @media(max-width:900px){.stats-banner{grid-template-columns:repeat(3,1fr)}}
-    @media(max-width:600px){.stats-banner{grid-template-columns:repeat(2,1fr)}}
-    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;transition:all .2s}
-    .stat-card:hover{border-color:var(--purple);transform:translateY(-2px)}
-    .stat-card.highlight{border-color:var(--emergency-red);background:rgba(239,68,68,0.1)}
-    .stat-value{font-size:28px;font-weight:900;line-height:1}
-    .stat-value.red{color:var(--emergency-red)}
-    .stat-value.orange{color:var(--warning-orange)}
-    .stat-value.green{color:var(--success-green)}
-    .stat-value.cyan{color:var(--cyan)}
-    .stat-value.purple{color:var(--purple)}
-    .stat-label{font-size:10px;color:var(--text-muted);margin-top:6px;text-transform:uppercase}
-    
-    .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;padding:6px;background:var(--bg-card);border-radius:10px;border:1px solid var(--border)}
-    .tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-secondary);background:transparent;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
-    .tab:hover{background:rgba(168,85,247,0.1);color:var(--text-primary)}
-    .tab.active{background:var(--purple);color:#fff}
-    .tab .badge{padding:2px 6px;font-size:9px;border-radius:8px;background:rgba(255,255,255,0.2);font-weight:700}
-    
-    .panel{display:none;animation:slideIn 0.3s ease}
-    .panel.active{display:block}
-    
-    .section{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-    .section-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
-    .section-header h3{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
-    .section-header .badge{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--purple);color:#fff}
-    .section-controls{display:flex;gap:6px}
-    .section-controls button{padding:5px 10px;font-size:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-secondary);border-radius:4px;cursor:pointer}
-    .section-controls button:hover{background:rgba(168,85,247,0.1);border-color:var(--purple);color:var(--purple)}
-    .section-controls button.active{background:rgba(168,85,247,0.15);border-color:var(--purple);color:var(--purple)}
-    
-    .data-table{width:100%;border-collapse:collapse}
-    .data-table th{padding:10px 14px;font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;text-align:left;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border)}
-    .data-table td{padding:12px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
-    .data-table tr:hover{background:rgba(168,85,247,0.05)}
-    .ioc-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);word-break:break-all;max-width:280px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .ioc-value:hover{white-space:normal}
-    .threat-tag{display:inline-flex;padding:3px 8px;font-size:10px;font-weight:600;border-radius:4px}
-    .threat-tag.malware{background:rgba(239,68,68,0.15);color:var(--emergency-red)}
-    .threat-tag.botnet{background:rgba(249,115,22,0.15);color:var(--warning-orange)}
-    .threat-tag.c2{background:rgba(168,85,247,0.15);color:var(--purple)}
-    .threat-tag.payload{background:rgba(34,211,238,0.15);color:var(--cyan)}
-    .threat-tag.ransomware{background:rgba(168,85,247,0.2);color:var(--purple)}
-    .time-ago{font-size:11px;color:var(--text-muted)}
-    
-    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:16px}
-    .card{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s}
-    .card:hover{border-color:var(--purple);transform:translateY(-2px)}
-    .card-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
-    .card-title{font-size:13px;font-weight:700;color:var(--text-primary)}
-    .card-badge{padding:3px 8px;font-size:10px;font-weight:600;border-radius:4px;background:rgba(168,85,247,0.15);color:var(--purple)}
-    .card-meta{font-size:11px;color:var(--text-secondary);margin-bottom:8px}
-    .card-footer{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted)}
-    
-    .search-box{padding:20px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border)}
-    .search-form{display:flex;gap:10px;max-width:700px;margin:0 auto}
-    .search-group{flex:1;display:flex;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-    .search-select{padding:12px 14px;font-size:12px;background:rgba(0,0,0,0.3);border:none;border-right:1px solid var(--border);color:var(--text-primary);cursor:pointer}
-    .search-input{flex:1;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;background:transparent;border:none;color:var(--text-primary)}
-    .search-input:focus{outline:none}
-    .search-btn{padding:12px 24px;font-size:12px;font-weight:700;background:var(--purple);border:none;border-radius:8px;color:#fff;cursor:pointer;transition:all 0.2s}
-    .search-btn:hover{background:#9333ea}
-    .search-btn:disabled{opacity:0.5;cursor:not-allowed}
-    .search-results{padding:16px}
-    .search-empty{text-align:center;padding:50px 20px;color:var(--text-muted)}
-    .search-empty .icon{font-size:40px;margin-bottom:12px;opacity:0.5}
-    
-    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-muted)}
-    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
-    .error-state{text-align:center;padding:50px 20px;color:var(--emergency-red)}
-    .error-state button{margin-top:12px;padding:10px 20px;background:var(--emergency-red);border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer}
-    
-    .sidebar{position:fixed;right:-400px;top:0;bottom:0;width:380px;background:var(--bg-secondary);border-left:1px solid var(--border);z-index:200;transition:right 0.3s;overflow-y:auto}
-    .sidebar.active{right:0}
-    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:199}
-    .sidebar-overlay.active{display:block}
-    .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)}
-    .sidebar-header h3{font-size:14px;font-weight:700}
-    .sidebar-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer}
-    .sidebar-body{padding:20px}
-    .form-group{margin-bottom:16px}
-    .form-group label{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase}
-    .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;font-size:13px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary)}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--purple)}
-    .form-group textarea{min-height:80px;resize:vertical}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .form-submit{width:100%;padding:14px;font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--purple),#c084fc);border:none;border-radius:8px;color:#fff;cursor:pointer;transition:all 0.2s}
-    .form-submit:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(168,85,247,0.4)}
-    .form-note{font-size:10px;color:var(--text-muted);margin-top:12px;text-align:center}
-    
-    .cta-banner{background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(34,211,238,0.05));border:1px solid var(--border);border-radius:10px;padding:24px;text-align:center;margin-top:16px}
-    .cta-banner h3{font-size:16px;font-weight:700;margin-bottom:6px}
-    .cta-banner p{font-size:12px;color:var(--text-secondary);margin-bottom:16px}
-    .cta-banner .btn{margin:0 6px}
-    
-    @media(max-width:768px){
-      .header-inner{flex-direction:column}
-      .search-form{flex-direction:column}
-      .search-group{flex-direction:column}
-      .search-select{border-right:none;border-bottom:1px solid var(--border)}
-      .sidebar{width:100%;right:-100%}
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/threat-dashboard.css">
 </head>
 <body>
-  <div class="top-glow"></div>
+  <div class="app-bg"></div>
   
-  <header>
+  <!-- Header -->
+  <header class="header">
     <div class="header-inner">
-      <a href="/" class="logo"><h1>🛡️ CVEPulse</h1></a>
-      <div class="header-right">
-        <div class="live-indicator"><span class="live-dot"></span>LIVE</div>
-        <span class="refresh-info" id="last-update">Updated: --</span>
-        <button class="btn btn-outline" onclick="refreshAllData()">↻ Refresh</button>
-        <button class="btn btn-outline" onclick="openSidebar('export-sidebar')">📥 Export</button>
-        <button class="btn btn-cta" onclick="openSidebar('subscribe-sidebar')">🔔 Subscribe</button>
+      <a href="https://www.cvepulse.com" class="logo">
+        <div class="logo-mark">🛡️</div>
+        <div class="logo-text">
+          <span class="logo-name">CVEPulse</span>
+          <span class="logo-tag">Threat Intelligence</span>
+        </div>
+      </a>
+      
+      <div class="header-status">
+        <div class="status-badge live">
+          <span class="status-dot"></span>
+          LIVE
+        </div>
+        <span class="status-time" id="last-update">Updating...</span>
       </div>
+      
+      <nav class="header-nav">
+        <a href="dashboard.html" class="nav-link">CVE Dashboard</a>
+        <button class="btn btn-outline" onclick="exportReport()">📊 Export</button>
+        <button class="btn btn-primary" onclick="openModal('subscribe-modal')">Subscribe</button>
+      </nav>
     </div>
   </header>
-  
-  <nav style="background:rgba(0,0,0,0.2);border-bottom:1px solid var(--border);padding:8px 24px">
-    <div style="max-width:1600px;margin:0 auto;display:flex;gap:8px;flex-wrap:wrap">
-      <a href="/" style="padding:6px 12px;font-size:11px;color:var(--text-secondary);text-decoration:none;border-radius:4px">Home</a>
-      <a href="/dashboard.html" style="padding:6px 12px;font-size:11px;color:var(--text-secondary);text-decoration:none;border-radius:4px">CVE Dashboard</a>
-      <a href="/threat-dashboard.html" style="padding:6px 12px;font-size:11px;color:var(--purple);text-decoration:none;border-radius:4px;background:rgba(168,85,247,0.1)">Threat Intel</a>
-    </div>
-  </nav>
-  
-  <main class="container">
-    <div class="alert-banner success" id="success-banner">
-      <span>✅</span>
-      <p id="success-msg">Success!</p>
-      <button class="close-btn" onclick="hideSuccess()">×</button>
-    </div>
-    <div class="alert-banner error" id="error-banner">
-      <span>⚠️</span>
-      <p id="error-msg">Error occurred</p>
-      <button class="close-btn" onclick="hideError()">×</button>
-    </div>
-    
-    <div class="stats-banner">
-      <div class="stat-card highlight"><div class="stat-value red" id="stat-iocs">--</div><div class="stat-label">Active IoCs (24h)</div></div>
-      <div class="stat-card"><div class="stat-value purple" id="stat-ransomware">--</div><div class="stat-label">Ransomware Victims</div></div>
-      <div class="stat-card"><div class="stat-value orange" id="stat-urls">--</div><div class="stat-label">Malicious URLs</div></div>
-      <div class="stat-card"><div class="stat-value cyan" id="stat-botnets">--</div><div class="stat-label">Botnet C2 Servers</div></div>
-      <div class="stat-card"><div class="stat-value green" id="stat-groups">--</div><div class="stat-label">Threat Actors</div></div>
-    </div>
-    
-    <div class="tabs">
-      <button class="tab active" data-tab="feed">🚨 Live Threats <span class="badge" id="feed-count">--</span></button>
-      <button class="tab" data-tab="ransomware">💀 Ransomware <span class="badge" id="ransomware-count">--</span></button>
-      <button class="tab" data-tab="actors">👥 Threat Actors <span class="badge" id="actors-count">--</span></button>
-      <button class="tab" data-tab="ioc">🔍 IoC Lookup</button>
-      <button class="tab" data-tab="malware">🦠 Malware <span class="badge" id="malware-count">--</span></button>
-      <button class="tab" data-tab="botnets">🤖 Botnets <span class="badge" id="botnets-count">--</span></button>
-    </div>
-    
-    <div class="panel active" id="panel-feed">
-      <div class="section">
-        <div class="section-header">
-          <h3>🚨 Live Threat Feed <span class="badge" id="feed-total">0</span></h3>
-          <div class="section-controls">
-            <button class="active" data-filter="all">All</button>
-            <button data-filter="malware">Malware</button>
-            <button data-filter="payload">URLs</button>
-            <button data-filter="botnet">Botnet</button>
-          </div>
-        </div>
-        <div id="feed-content"><div class="loading"><div class="spinner"></div><p>Loading live threats...</p></div></div>
-      </div>
-    </div>
-    
-    <div class="panel" id="panel-ransomware">
-      <div class="section">
-        <div class="section-header">
-          <h3>💀 Recent Ransomware Victims <span class="badge" id="victims-total">0</span></h3>
-          <div class="section-controls"><button onclick="loadRansomware()">↻ Refresh</button></div>
-        </div>
-        <div id="ransomware-content"><div class="loading"><div class="spinner"></div><p>Loading ransomware data...</p></div></div>
-      </div>
-    </div>
-    
-    <div class="panel" id="panel-actors">
-      <div class="section">
-        <div class="section-header">
-          <h3>👥 Active Threat Actors <span class="badge" id="actors-total">0</span></h3>
-        </div>
-        <div id="actors-content"><div class="loading"><div class="spinner"></div><p>Loading threat actors...</p></div></div>
-      </div>
-    </div>
-    
-    <div class="panel" id="panel-ioc">
-      <div class="section">
-        <div class="search-box">
-          <form class="search-form" onsubmit="searchIoC(event)">
-            <div class="search-group">
-              <select class="search-select" id="ioc-type">
-                <option value="ip">IP Address</option>
-                <option value="domain">Domain</option>
-                <option value="hash">File Hash</option>
-                <option value="url">URL</option>
-              </select>
-              <input type="text" class="search-input" id="ioc-value" placeholder="Enter indicator to search..." required>
+
+  <main class="main">
+    <!-- SECTION 1: Threat Posture (60-second CISO view) -->
+    <section class="posture-section" id="posture-section">
+      <div class="posture-header">
+        <div class="posture-level" id="posture-level">
+          <div class="posture-indicator loading" id="posture-indicator">
+            <div class="posture-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                <circle class="ring-value" cx="50" cy="50" r="45" id="posture-ring"></circle>
+              </svg>
+              <div class="posture-score">
+                <span class="score-value" id="posture-score">--</span>
+                <span class="score-label">RISK</span>
+              </div>
             </div>
-            <button type="submit" class="search-btn" id="search-btn">🔍 Search</button>
-          </form>
+          </div>
+          <div class="posture-meta">
+            <h2 class="posture-title" id="posture-title">Loading Threat Posture...</h2>
+            <p class="posture-trend" id="posture-trend">Analyzing threat data</p>
+          </div>
         </div>
-        <div class="search-results" id="ioc-results">
-          <div class="search-empty">
-            <div class="icon">🔍</div>
-            <h4>Search Indicators of Compromise</h4>
-            <p>Enter an IP, domain, hash, or URL to check against ThreatFox, URLhaus, and MalwareBazaar.</p>
+        
+        <div class="posture-factors" id="posture-factors">
+          <!-- Dynamic factors -->
+        </div>
+      </div>
+      
+      <div class="metrics-grid" id="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">💀</div>
+          <div class="metric-data">
+            <span class="metric-value critical" id="metric-ransomware-24h">--</span>
+            <span class="metric-label">Ransomware Victims (24h)</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">⚠️</div>
+          <div class="metric-data">
+            <span class="metric-value high" id="metric-kev">--</span>
+            <span class="metric-label">New Exploited CVEs (7d)</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🎯</div>
+          <div class="metric-data">
+            <span class="metric-value medium" id="metric-campaigns">--</span>
+            <span class="metric-label">Active Campaigns</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon">🔍</div>
+          <div class="metric-data">
+            <span class="metric-value info" id="metric-iocs">--</span>
+            <span class="metric-label">High-Confidence IoCs</span>
           </div>
         </div>
       </div>
-    </div>
-    
-    <div class="panel" id="panel-malware">
-      <div class="section">
-        <div class="section-header">
-          <h3>🦠 Recent Malware Samples <span class="badge" id="malware-total">0</span></h3>
-          <div class="section-controls"><button onclick="loadMalware()">↻ Refresh</button></div>
-        </div>
-        <div id="malware-content"><div class="loading"><div class="spinner"></div><p>Loading malware samples...</p></div></div>
+    </section>
+
+    <!-- SECTION 2: Emerging Threats -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">🔥 Emerging Threats</h2>
+        <span class="section-subtitle">Top threats requiring attention</span>
       </div>
-    </div>
-    
-    <div class="panel" id="panel-botnets">
-      <div class="section">
-        <div class="section-header">
-          <h3>🤖 Botnet C2 Servers <span class="badge" id="botnets-total">0</span></h3>
-          <div class="section-controls"><button onclick="loadBotnets()">↻ Refresh</button></div>
-        </div>
-        <div id="botnets-content"><div class="loading"><div class="spinner"></div><p>Loading botnet data...</p></div></div>
+      <div class="emerging-threats" id="emerging-threats">
+        <div class="loading-state"><div class="spinner"></div>Analyzing threats...</div>
       </div>
-    </div>
-    
-    <div class="cta-banner">
-      <h3>🎯 Need Custom Threat Intelligence?</h3>
-      <p>Get sector-specific threat reports, dark web monitoring, and executive briefings for your organization.</p>
-      <button class="btn btn-cta" onclick="openSidebar('contact-sidebar')">Request Consultation</button>
-      <a href="/" class="btn btn-outline">View Services</a>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="threats" onclick="switchTab('threats')">
+        🎯 Enriched Threats
+        <span class="tab-badge" id="tab-threats-count">--</span>
+      </button>
+      <button class="tab-btn" data-tab="campaigns" onclick="switchTab('campaigns')">
+        📡 Campaigns
+        <span class="tab-badge" id="tab-campaigns-count">--</span>
+      </button>
+      <button class="tab-btn" data-tab="ransomware" onclick="switchTab('ransomware')">
+        💀 Ransomware
+        <span class="tab-badge" id="tab-ransomware-count">--</span>
+      </button>
+      <button class="tab-btn" data-tab="timeline" onclick="switchTab('timeline')">
+        📈 Timeline
+      </button>
+      <button class="tab-btn" data-tab="lookup" onclick="switchTab('lookup')">
+        🔍 IoC Lookup
+      </button>
+    </nav>
+
+    <!-- Tab Panels -->
+    <div class="tab-panels">
+      <!-- Enriched Threats Panel -->
+      <div class="tab-panel active" id="panel-threats">
+        <div class="panel-header">
+          <div class="filter-bar">
+            <select class="filter-select" id="filter-relevance" onchange="filterThreats()">
+              <option value="all">All Relevance</option>
+              <option value="HIGH">High Only</option>
+              <option value="MEDIUM">Medium+</option>
+            </select>
+            <select class="filter-select" id="filter-action" onchange="filterThreats()">
+              <option value="all">All Actions</option>
+              <option value="BLOCK_IMMEDIATELY">Block Immediately</option>
+              <option value="INVESTIGATE">Investigate</option>
+              <option value="MONITOR">Monitor</option>
+            </select>
+            <input type="text" class="filter-search" id="filter-search" placeholder="Search indicators..." oninput="filterThreats()">
+          </div>
+          <div class="panel-actions">
+            <button class="btn btn-outline btn-sm" onclick="refreshThreats()">↻ Refresh</button>
+            <button class="btn btn-outline btn-sm" onclick="exportThreats()">Export CSV</button>
+          </div>
+        </div>
+        <div class="threats-table-wrap" id="threats-table">
+          <div class="loading-state"><div class="spinner"></div>Loading enriched threats...</div>
+        </div>
+      </div>
+
+      <!-- Campaigns Panel -->
+      <div class="tab-panel" id="panel-campaigns">
+        <div class="campaigns-grid" id="campaigns-grid">
+          <div class="loading-state"><div class="spinner"></div>Detecting campaigns...</div>
+        </div>
+      </div>
+
+      <!-- Ransomware Panel -->
+      <div class="tab-panel" id="panel-ransomware">
+        <div class="ransomware-layout">
+          <div class="ransomware-main" id="ransomware-victims">
+            <div class="loading-state"><div class="spinner"></div>Loading ransomware intelligence...</div>
+          </div>
+          <div class="ransomware-sidebar" id="ransomware-groups">
+            <!-- Group intel -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Panel -->
+      <div class="tab-panel" id="panel-timeline">
+        <div class="timeline-controls">
+          <button class="period-btn active" data-period="7d" onclick="loadTimeline('7d')">7 Days</button>
+          <button class="period-btn" data-period="14d" onclick="loadTimeline('14d')">14 Days</button>
+          <button class="period-btn" data-period="30d" onclick="loadTimeline('30d')">30 Days</button>
+        </div>
+        <div class="timeline-content" id="timeline-content">
+          <div class="loading-state"><div class="spinner"></div>Loading timeline...</div>
+        </div>
+      </div>
+
+      <!-- IoC Lookup Panel -->
+      <div class="tab-panel" id="panel-lookup">
+        <div class="lookup-section">
+          <div class="lookup-header">
+            <h3>Indicator of Compromise Enrichment</h3>
+            <p>Search IPs, domains, URLs, or file hashes for threat context and recommendations</p>
+          </div>
+          <div class="lookup-form">
+            <select class="lookup-type" id="lookup-type">
+              <option value="ip">IP Address</option>
+              <option value="domain">Domain</option>
+              <option value="url">URL</option>
+              <option value="hash">File Hash (MD5/SHA256)</option>
+            </select>
+            <input type="text" class="lookup-input" id="lookup-value" placeholder="Enter indicator value...">
+            <button class="btn btn-primary" onclick="lookupIoC()">Analyze</button>
+          </div>
+          <div class="lookup-results" id="lookup-results"></div>
+        </div>
+      </div>
     </div>
   </main>
-  
-  <!-- Subscribe Sidebar -->
-  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-  <div class="sidebar" id="subscribe-sidebar">
-    <div class="sidebar-header">
-      <h3>🔔 Subscribe to Threat Alerts</h3>
-      <button class="sidebar-close" onclick="closeSidebar()">×</button>
-    </div>
-    <div class="sidebar-body">
-      <form onsubmit="handleSubscribe(event)">
-        <div class="form-group">
-          <label>Email Address *</label>
-          <input type="email" id="sub-email" required placeholder="you@company.com">
-        </div>
-        <div class="form-group">
-          <label>Company Name</label>
-          <input type="text" id="sub-company" placeholder="Your Organization">
-        </div>
-        <div class="form-group">
-          <label>Alert Frequency</label>
-          <select id="sub-frequency">
-            <option value="immediate">⚡ Immediate (Real-time)</option>
-            <option value="daily" selected>📊 Daily Digest</option>
-            <option value="weekly">📈 Weekly Summary</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Threat Categories (Optional)</label>
-          <input type="text" id="sub-watchlist" placeholder="ransomware, apt, malware">
-        </div>
-        <div class="form-group">
-          <label>Sectors of Interest</label>
-          <select id="sub-sector">
-            <option value="all">All Sectors</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="finance">Finance</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="government">Government</option>
-            <option value="technology">Technology</option>
-          </select>
-        </div>
-        <button type="submit" class="form-submit" id="sub-btn">Subscribe to Alerts</button>
-        <p class="form-note">🔒 We respect your privacy. Unsubscribe anytime.</p>
-      </form>
-    </div>
-  </div>
-  
-  <!-- Export Sidebar -->
-  <div class="sidebar" id="export-sidebar">
-    <div class="sidebar-header">
-      <h3>📥 Export Threat Data</h3>
-      <button class="sidebar-close" onclick="closeSidebar()">×</button>
-    </div>
-    <div class="sidebar-body">
-      <div class="form-group">
-        <label>Export Format</label>
-        <button class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="exportCSV()">📄 Export as CSV</button>
-        <button class="btn btn-outline" style="width:100%;margin-bottom:8px" onclick="exportJSON()">📋 Export as JSON</button>
-        <button class="btn btn-outline" style="width:100%" onclick="generateReport()">📊 Generate Report</button>
+
+  <!-- Subscribe Modal -->
+  <div class="modal-overlay" id="subscribe-modal" onclick="closeModalBg(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🔔 Subscribe to Threat Alerts</h3>
+        <button class="modal-close" onclick="closeModal('subscribe-modal')">×</button>
       </div>
-      <p class="form-note">Exports current threat feed data visible on dashboard.</p>
-    </div>
-  </div>
-  
-  <!-- Contact Sidebar -->
-  <div class="sidebar" id="contact-sidebar">
-    <div class="sidebar-header">
-      <h3>📞 Request Consultation</h3>
-      <button class="sidebar-close" onclick="closeSidebar()">×</button>
-    </div>
-    <div class="sidebar-body">
-      <form onsubmit="handleContact(event)">
-        <div class="form-group">
-          <label>Name *</label>
-          <input type="text" id="contact-name" required>
-        </div>
-        <div class="form-group">
-          <label>Email *</label>
-          <input type="email" id="contact-email" required>
-        </div>
-        <div class="form-group">
-          <label>Company</label>
-          <input type="text" id="contact-company">
-        </div>
-        <div class="form-group">
-          <label>Service Interest</label>
-          <select id="contact-service">
-            <option value="threat-intel">Threat Intelligence Reports</option>
-            <option value="dark-web">Dark Web Monitoring</option>
-            <option value="incident-response">Incident Response</option>
-            <option value="executive-briefing">Executive Briefings</option>
-            <option value="soc-monitoring">SOC Monitoring</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Message</label>
-          <textarea id="contact-message" placeholder="Tell us about your needs..."></textarea>
-        </div>
-        <button type="submit" class="form-submit">Submit Request</button>
-      </form>
+      <div class="modal-body">
+        <form id="subscribe-form" onsubmit="handleSubscribe(event)">
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" class="form-input" id="sub-email" required placeholder="security@company.com">
+          </div>
+          <div class="form-group">
+            <label>Company</label>
+            <input type="text" class="form-input" id="sub-company" placeholder="Your organization">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Industry</label>
+              <select class="form-select" id="sub-sector">
+                <option value="general">All Industries</option>
+                <option value="healthcare">Healthcare / Pharma</option>
+                <option value="finance">Finance / Banking</option>
+                <option value="technology">Technology</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="energy">Energy / Utilities</option>
+                <option value="government">Government</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Frequency</label>
+              <select class="form-select" id="sub-frequency">
+                <option value="immediate">Critical Only (Immediate)</option>
+                <option value="daily" selected>Daily Digest</option>
+                <option value="weekly">Weekly Summary</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="sub-btn">Subscribe</button>
+        </form>
+      </div>
     </div>
   </div>
 
-<script>
-// ============================================
-// CONFIGURATION
-// ============================================
-const API_BASE = 'https://us-central1-cvepulse.cloudfunctions.net';
-let threatData = { feed: null, ransomware: null, actors: null, malware: null, botnets: null };
-let currentFilter = 'all';
+  <!-- Threat Detail Modal -->
+  <div class="modal-overlay" id="threat-modal" onclick="closeModalBg(event)">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="threat-modal-title">Threat Details</h3>
+        <button class="modal-close" onclick="closeModal('threat-modal')">×</button>
+      </div>
+      <div class="modal-body" id="threat-modal-body">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
 
-// ============================================
-// INITIALIZATION
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-  initTabs();
-  initFilters();
-  loadAllData();
-  setInterval(loadAllData, 5 * 60 * 1000);
-});
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
 
-function initTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
-    });
-  });
-}
+  <!-- Footer -->
+  <footer class="footer">
+    <p><strong><a href="https://www.cvepulse.com">CVEPulse</a></strong> — Enterprise Threat Intelligence Platform</p>
+    <p>Sources: CISA KEV, Abuse.ch (ThreatFox, URLhaus, MalwareBazaar, Feodo Tracker), Ransomware.live</p>
+    <p>Auto-refreshes every 5 minutes • All data is live, no mock data</p>
+  </footer>
 
-function initFilters() {
-  document.querySelectorAll('.section-controls button[data-filter]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.section-controls button[data-filter]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      if (threatData.feed) renderThreatFeed(threatData.feed);
-    });
-  });
-}
-
-// ============================================
-// DATA LOADING
-// ============================================
-function refreshAllData() { showSuccess('Refreshing...'); loadAllData(); }
-
-async function loadAllData() {
-  document.getElementById('last-update').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
-  await Promise.allSettled([loadThreatFeed(), loadRansomware(), loadMalware(), loadBotnets()]);
-}
-
-async function loadThreatFeed() {
-  try {
-    const r = await fetch(`${API_BASE}/threatfeed`);
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    threatData.feed = data;
-    renderThreatFeed(data);
-    updateStats(data);
-  } catch (e) {
-    document.getElementById('feed-content').innerHTML = '<div class="error-state"><p>Failed to load</p><button onclick="loadThreatFeed()">Retry</button></div>';
-  }
-}
-
-async function loadRansomware() {
-  try {
-    const r = await fetch(`${API_BASE}/ransomware`);
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    threatData.ransomware = data;
-    threatData.actors = data.groups;
-    renderRansomware(data);
-    renderActors(data.groups);
-  } catch (e) {
-    document.getElementById('ransomware-content').innerHTML = '<div class="error-state"><p>Failed to load</p><button onclick="loadRansomware()">Retry</button></div>';
-  }
-}
-
-async function loadMalware() {
-  try {
-    const r = await fetch(`${API_BASE}/malware`);
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    threatData.malware = data;
-    renderMalware(data);
-  } catch (e) {
-    document.getElementById('malware-content').innerHTML = '<div class="error-state"><p>Failed to load</p><button onclick="loadMalware()">Retry</button></div>';
-  }
-}
-
-async function loadBotnets() {
-  try {
-    const r = await fetch(`${API_BASE}/botnets`);
-    if (!r.ok) throw new Error('API error');
-    const data = await r.json();
-    threatData.botnets = data;
-    renderBotnets(data);
-  } catch (e) {
-    document.getElementById('botnets-content').innerHTML = '<div class="error-state"><p>Failed to load</p><button onclick="loadBotnets()">Retry</button></div>';
-  }
-}
-
-// ============================================
-// RENDERING
-// ============================================
-function updateStats(d) {
-  const s = d?.summary || {};
-  document.getElementById('stat-iocs').textContent = fmtNum(s.threatfox_iocs || 0);
-  document.getElementById('stat-urls').textContent = fmtNum(s.malicious_urls || 0);
-  document.getElementById('stat-ransomware').textContent = fmtNum(s.ransomware_victims || 0);
-  document.getElementById('stat-botnets').textContent = fmtNum(s.botnet_c2s || 0);
-  document.getElementById('feed-count').textContent = s.threatfox_iocs || 0;
-}
-
-function renderThreatFeed(data) {
-  const el = document.getElementById('feed-content');
-  const src = data.sources || {};
-  let items = [];
-  
-  if (src.threatfox?.data) src.threatfox.data.slice(0,50).forEach(i => items.push({type:'malware',ioc:i.ioc||i.ioc_value,threat:i.malware_printable||'Unknown',source:'ThreatFox',time:i.first_seen}));
-  if (src.urlhaus?.urls) src.urlhaus.urls.slice(0,30).forEach(u => items.push({type:'payload',ioc:u.url,threat:u.threat||'Malicious URL',source:'URLhaus',time:u.date_added}));
-  if (src.feodo && Array.isArray(src.feodo)) src.feodo.slice(0,20).forEach(b => items.push({type:'botnet',ioc:b.ip_address||b.dst_ip,threat:b.malware||'Botnet C2',source:'Feodo',time:b.first_seen}));
-  
-  if (currentFilter !== 'all') items = items.filter(i => i.type === currentFilter);
-  document.getElementById('feed-total').textContent = items.length;
-  
-  if (!items.length) { el.innerHTML = '<div class="search-empty"><p>No data</p></div>'; return; }
-  
-  let h = '<table class="data-table"><thead><tr><th>Type</th><th>Indicator</th><th>Threat</th><th>Source</th><th>Time</th></tr></thead><tbody>';
-  items.forEach(i => h += `<tr><td><span class="threat-tag ${i.type}">${i.type}</span></td><td><span class="ioc-value" title="${esc(i.ioc)}">${trunc(i.ioc,45)}</span></td><td>${esc(i.threat)}</td><td>${i.source}</td><td class="time-ago">${timeAgo(i.time)}</td></tr>`);
-  el.innerHTML = h + '</tbody></table>';
-}
-
-function renderRansomware(data) {
-  const el = document.getElementById('ransomware-content');
-  const victims = data.recent_victims || [];
-  document.getElementById('victims-total').textContent = victims.length;
-  document.getElementById('ransomware-count').textContent = victims.length;
-  
-  if (!victims.length) { el.innerHTML = '<div class="search-empty"><p>No data</p></div>'; return; }
-  
-  let h = '<div class="card-grid">';
-  victims.slice(0,50).forEach(v => h += `<div class="card"><div class="card-header"><span class="card-title">${esc(v.victim||v.post_title||'Unknown')}</span><span class="card-badge">${esc(v.group_name||'Unknown')}</span></div><div class="card-meta">🌐 ${esc(v.website||v.post_url||'N/A')}</div><div class="card-footer"><span>📅 ${v.discovered||v.published||'Unknown'}</span></div></div>`);
-  el.innerHTML = h + '</div>';
-}
-
-function renderActors(groups) {
-  const el = document.getElementById('actors-content');
-  if (!groups?.length) { el.innerHTML = '<div class="search-empty"><p>No data</p></div>'; return; }
-  
-  document.getElementById('actors-total').textContent = groups.length;
-  document.getElementById('actors-count').textContent = groups.length;
-  document.getElementById('stat-groups').textContent = fmtNum(groups.length);
-  
-  let h = '<div class="card-grid">';
-  groups.slice(0,40).forEach(g => h += `<div class="card"><div class="card-header"><span class="card-title">💀 ${esc(g.name||'Unknown')}</span></div><div class="card-meta">${g.locations?.length||0} known sites</div></div>`);
-  el.innerHTML = h + '</div>';
-}
-
-function renderMalware(data) {
-  const el = document.getElementById('malware-content');
-  const samples = data.samples || [];
-  document.getElementById('malware-total').textContent = samples.length;
-  document.getElementById('malware-count').textContent = samples.length;
-  
-  if (!samples.length) { el.innerHTML = '<div class="search-empty"><p>No data</p></div>'; return; }
-  
-  let h = '<table class="data-table"><thead><tr><th>SHA256</th><th>Type</th><th>Signature</th><th>Tags</th><th>First Seen</th></tr></thead><tbody>';
-  samples.slice(0,50).forEach(s => h += `<tr><td><span class="ioc-value" title="${s.sha256_hash}">${trunc(s.sha256_hash,18)}</span></td><td>${esc(s.file_type||'?')}</td><td>${esc(s.signature||'N/A')}</td><td>${(s.tags||[]).slice(0,2).join(', ')}</td><td class="time-ago">${timeAgo(s.first_seen)}</td></tr>`);
-  el.innerHTML = h + '</tbody></table>';
-}
-
-function renderBotnets(data) {
-  const el = document.getElementById('botnets-content');
-  const bots = data.recommended || [];
-  document.getElementById('botnets-total').textContent = bots.length;
-  document.getElementById('botnets-count').textContent = bots.length;
-  
-  if (!bots.length) { el.innerHTML = '<div class="search-empty"><p>No data</p></div>'; return; }
-  
-  let h = '<table class="data-table"><thead><tr><th>IP Address</th><th>Port</th><th>Malware</th><th>Status</th><th>Last Online</th></tr></thead><tbody>';
-  bots.slice(0,50).forEach(b => h += `<tr><td><span class="ioc-value">${esc(b.ip_address||b.dst_ip||'N/A')}</span></td><td>${b.dst_port||b.port||'N/A'}</td><td><span class="threat-tag botnet">${esc(b.malware||'Botnet')}</span></td><td>Active</td><td class="time-ago">${b.last_online||'Recent'}</td></tr>`);
-  el.innerHTML = h + '</tbody></table>';
-}
-
-// ============================================
-// IOC SEARCH
-// ============================================
-async function searchIoC(e) {
-  e.preventDefault();
-  const type = document.getElementById('ioc-type').value;
-  const value = document.getElementById('ioc-value').value.trim();
-  const btn = document.getElementById('search-btn');
-  const results = document.getElementById('ioc-results');
-  
-  if (!value) return;
-  btn.disabled = true; btn.textContent = 'Searching...';
-  results.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
-  
-  try {
-    const r = await fetch(`${API_BASE}/ioclookup`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({type, value}) });
-    if (!r.ok) throw new Error('Search failed');
-    renderIoCResults(await r.json());
-  } catch (err) {
-    results.innerHTML = '<div class="error-state"><p>Search failed</p></div>';
-  } finally {
-    btn.disabled = false; btn.textContent = '🔍 Search';
-  }
-}
-
-function renderIoCResults(data) {
-  const el = document.getElementById('ioc-results');
-  const src = data.sources || {};
-  let found = false;
-  let h = `<div style="padding:16px"><h4 style="margin-bottom:12px">Results: <span class="ioc-value">${esc(data.value)}</span></h4>`;
-  
-  if (src.threatfox?.query_status === 'ok' && src.threatfox?.data?.length) {
-    found = true;
-    h += `<div class="section" style="margin-bottom:12px"><div class="section-header"><h3>🦊 ThreatFox <span class="badge">${src.threatfox.data.length}</span></h3></div>`;
-    h += '<table class="data-table"><thead><tr><th>Type</th><th>Malware</th><th>Confidence</th></tr></thead><tbody>';
-    src.threatfox.data.forEach(r => h += `<tr><td><span class="threat-tag malware">${r.threat_type||'malware'}</span></td><td>${esc(r.malware_printable||'Unknown')}</td><td>${r.confidence_level||'N/A'}%</td></tr>`);
-    h += '</tbody></table></div>';
-  }
-  if (src.urlhaus?.query_status === 'ok') { found = true; h += `<div class="section" style="margin-bottom:12px;padding:16px"><h4>🔗 URLhaus</h4><p>Status: ${src.urlhaus.url_status||'Unknown'}</p></div>`; }
-  if (src.malwarebazaar?.query_status === 'ok' && src.malwarebazaar?.data?.length) { found = true; const m = src.malwarebazaar.data[0]; h += `<div class="section" style="padding:16px"><h4>🦠 MalwareBazaar</h4><p>Type: ${m.file_type||'?'} | Signature: ${m.signature||'N/A'}</p></div>`; }
-  
-  if (!found) h += '<div class="search-empty"><div class="icon">✅</div><h4>Not Found</h4><p>This indicator was not found in threat intelligence sources.</p></div>';
-  el.innerHTML = h + '</div>';
-}
-
-// ============================================
-// SUBSCRIPTION & FORMS
-// ============================================
-async function handleSubscribe(e) {
-  e.preventDefault();
-  const btn = document.getElementById('sub-btn');
-  const data = {
-    email: document.getElementById('sub-email').value,
-    company: document.getElementById('sub-company').value,
-    frequency: document.getElementById('sub-frequency').value,
-    watchlist: document.getElementById('sub-watchlist').value.split(',').map(s => s.trim()).filter(Boolean),
-    source: 'threat-dashboard'
-  };
-  
-  btn.disabled = true; btn.textContent = 'Subscribing...';
-  
-  try {
-    const r = await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    if (r.ok) {
-      showSuccess('✅ Subscribed! Check your email for confirmation.');
-      closeSidebar();
-      e.target.reset();
-    } else throw new Error();
-  } catch (err) {
-    showSuccess('✅ Subscribed! You will receive threat alerts at ' + data.email);
-    closeSidebar();
-  } finally {
-    btn.disabled = false; btn.textContent = 'Subscribe to Alerts';
-  }
-}
-
-async function handleContact(e) {
-  e.preventDefault();
-  const data = { name: document.getElementById('contact-name').value, email: document.getElementById('contact-email').value, company: document.getElementById('contact-company').value, service: document.getElementById('contact-service').value, message: document.getElementById('contact-message').value };
-  
-  try {
-    await fetch(`${API_BASE}/lead`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    showSuccess('✅ Request submitted! We will contact you soon.');
-  } catch (err) {
-    showSuccess('✅ Request received! We will contact you at ' + data.email);
-  }
-  closeSidebar();
-  e.target.reset();
-}
-
-// ============================================
-// EXPORT FUNCTIONS
-// ============================================
-function exportCSV() {
-  if (!threatData.feed?.sources) { showError('No data to export'); return; }
-  let rows = 'Type,Indicator,Threat,Source,Time\n';
-  const src = threatData.feed.sources;
-  if (src.threatfox?.data) src.threatfox.data.forEach(i => rows += `malware,"${i.ioc||''}","${i.malware_printable||''}",ThreatFox,${i.first_seen||''}\n`);
-  if (src.urlhaus?.urls) src.urlhaus.urls.forEach(u => rows += `url,"${u.url||''}","${u.threat||''}",URLhaus,${u.date_added||''}\n`);
-  download(rows, `cvepulse-threats-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-  showSuccess('CSV exported!');
-  closeSidebar();
-}
-
-function exportJSON() {
-  if (!threatData.feed) { showError('No data to export'); return; }
-  download(JSON.stringify(threatData.feed, null, 2), `cvepulse-threats-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
-  showSuccess('JSON exported!');
-  closeSidebar();
-}
-
-function generateReport() {
-  const s = threatData.feed?.summary || {};
-  const html = `<!DOCTYPE html><html><head><title>CVEPulse Threat Report</title><style>body{font-family:Arial;padding:40px;max-width:800px;margin:0 auto}h1{color:#a855f7}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border:1px solid #ddd;padding:10px;font-size:13px}th{background:#1e293b;color:#22d3ee}</style></head><body><h1>🛡️ CVEPulse Threat Intelligence Report</h1><p>Generated: ${new Date().toLocaleString()}</p><h2>Summary</h2><table><tr><th>Active IoCs</th><th>Malicious URLs</th><th>Ransomware Victims</th><th>Botnet C2s</th></tr><tr><td>${s.threatfox_iocs||0}</td><td>${s.malicious_urls||0}</td><td>${s.ransomware_victims||0}</td><td>${s.botnet_c2s||0}</td></tr></table><p style="color:#666;margin-top:40px">CVEPulse - www.cvepulse.com</p><script>window.print()<\/script></body></html>`;
-  const w = window.open(); w.document.write(html); w.document.close();
-  closeSidebar();
-}
-
-function download(content, filename, type) {
-  const blob = new Blob([content], {type});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-}
-
-// ============================================
-// UI UTILITIES
-// ============================================
-function openSidebar(id) { document.getElementById(id).classList.add('active'); document.getElementById('sidebar-overlay').classList.add('active'); }
-function closeSidebar() { document.querySelectorAll('.sidebar').forEach(s => s.classList.remove('active')); document.getElementById('sidebar-overlay').classList.remove('active'); }
-function showSuccess(msg) { document.getElementById('success-msg').textContent = msg; document.getElementById('success-banner').classList.add('active'); setTimeout(hideSuccess, 5000); }
-function hideSuccess() { document.getElementById('success-banner').classList.remove('active'); }
-function showError(msg) { document.getElementById('error-msg').textContent = msg; document.getElementById('error-banner').classList.add('active'); setTimeout(hideError, 5000); }
-function hideError() { document.getElementById('error-banner').classList.remove('active'); }
-
-function fmtNum(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toString(); }
-function trunc(s, l) { return s && s.length > l ? s.substring(0,l)+'...' : s||''; }
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function timeAgo(date) {
-  if (!date) return 'Unknown';
-  const diff = Math.floor((new Date() - new Date(date)) / 1000);
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return Math.floor(diff/60)+'m ago';
-  if (diff < 86400) return Math.floor(diff/3600)+'h ago';
-  return Math.floor(diff/86400)+'d ago';
-}
-</script>
+  <script src="js/threat-dashboard.js"></script>
 </body>
 </html>
