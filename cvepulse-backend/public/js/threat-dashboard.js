@@ -1,722 +1,420 @@
 /**
- * CVEPulse Threat Intelligence Dashboard
- * JavaScript - CISO Grade
+ * CVEPulse Threat Intelligence Dashboard v3
+ * World-Class CISO-Grade Implementation
  */
 
-// ============================================
-// CONFIGURATION
-// ============================================
 const API_BASE = 'https://us-central1-cvepulse.cloudfunctions.net';
-const REFRESH_INTERVAL = 300000; // 5 minutes
+const REFRESH_INTERVAL = 300000;
 
-// Data cache
-let threatData = {
+let dashboardData = {
   executive: null,
-  trending: null,
+  threats: [],
+  filteredThreats: [],
+  campaigns: [],
   ransomware: null,
-  actors: null,
-  sectors: {},
-  geo: null
+  timeline: null
 };
 
-let currentSector = 'all';
-
-// ============================================
-// INITIALIZATION
-// ============================================
 document.addEventListener('DOMContentLoaded', () => {
-  loadAllData();
-  setInterval(loadAllData, REFRESH_INTERVAL);
-  
-  // Enter key for IoC search
-  document.getElementById('ioc-value').addEventListener('keypress', (e) => {
+  loadDashboard();
+  setInterval(loadDashboard, REFRESH_INTERVAL);
+  document.getElementById('lookup-value')?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') lookupIoC();
   });
 });
 
-// ============================================
-// DATA LOADING
-// ============================================
-async function loadAllData() {
+async function loadDashboard() {
   updateLastRefresh();
-  
-  // Load executive summary first (most important)
-  await loadExecutiveSummary();
-  
-  // Load other data in parallel
-  Promise.all([
-    loadTrending(),
-    loadRansomware(),
-    loadActors(),
-    loadGeoData()
-  ]).catch(err => console.error('Data load error:', err));
+  await loadExecutiveDashboard();
+  Promise.all([loadEnrichedThreats(), loadCampaigns(), loadRansomware(), loadTimeline('7d')]).catch(console.error);
 }
 
-async function loadExecutiveSummary() {
+async function loadExecutiveDashboard() {
   try {
-    const res = await fetch(`${API_BASE}/executiveSummary?sector=${currentSector}`);
+    const res = await fetch(`${API_BASE}/executiveDashboard`);
     const data = await res.json();
-    threatData.executive = data;
-    renderExecutiveSummary(data);
+    dashboardData.executive = data;
+    renderExecutiveDashboard(data);
   } catch (err) {
-    console.error('Executive summary error:', err);
-    // Fallback to basic threat feed
-    try {
-      const res = await fetch(`${API_BASE}/threatfeed`);
-      const data = await res.json();
-      renderFallbackSummary(data);
-    } catch (e) {
-      showToast('Failed to load threat data', 'error');
-    }
+    console.error('Executive dashboard error:', err);
   }
 }
 
-async function loadTrending() {
+async function loadEnrichedThreats() {
   try {
-    const res = await fetch(`${API_BASE}/trending`);
+    const res = await fetch(`${API_BASE}/enrichedThreats?limit=100`);
     const data = await res.json();
-    threatData.trending = data;
-    renderTrending(data);
-    
-    // Update badge
-    const totalTrending = (data.trendingMalware?.length || 0) + (data.trendingRansomware?.length || 0);
-    document.getElementById('badge-trending').textContent = totalTrending;
+    dashboardData.threats = data.threats || [];
+    dashboardData.filteredThreats = [...dashboardData.threats];
+    renderThreatsTable();
+    document.getElementById('tab-threats-count').textContent = data.stats?.total || 0;
   } catch (err) {
-    console.error('Trending error:', err);
-    document.getElementById('trending-malware').innerHTML = '<div class="empty-state">Failed to load trending data</div>';
+    console.error('Enriched threats error:', err);
+  }
+}
+
+async function loadCampaigns() {
+  try {
+    const res = await fetch(`${API_BASE}/campaigns`);
+    const data = await res.json();
+    dashboardData.campaigns = data.campaigns || [];
+    renderCampaigns();
+    document.getElementById('tab-campaigns-count').textContent = data.activeCampaigns || 0;
+  } catch (err) {
+    console.error('Campaigns error:', err);
   }
 }
 
 async function loadRansomware() {
   try {
-    const res = await fetch(`${API_BASE}/ransomware`);
+    const res = await fetch(`${API_BASE}/ransomwareIntel`);
     const data = await res.json();
-    threatData.ransomware = data;
-    renderRansomware(data);
-    
-    // Update badge
-    document.getElementById('badge-ransomware').textContent = data.stats?.total_victims_recent || 0;
+    dashboardData.ransomware = data;
+    renderRansomware();
+    document.getElementById('tab-ransomware-count').textContent = data.summary?.last24h || 0;
   } catch (err) {
     console.error('Ransomware error:', err);
   }
 }
 
-async function loadActors() {
+async function loadTimeline(period) {
   try {
-    const res = await fetch(`${API_BASE}/threatActor`);
+    document.querySelectorAll('.period-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.period === period));
+    document.getElementById('timeline-content').innerHTML = '<div class="loading-state"><div class="spinner"></div>Loading timeline...</div>';
+    const res = await fetch(`${API_BASE}/timeline?period=${period}`);
     const data = await res.json();
-    threatData.actors = data;
-    renderActors(data);
-    
-    // Update badge
-    document.getElementById('badge-actors').textContent = data.activeGroups || 0;
-    document.getElementById('active-actors-count').textContent = `${data.activeGroups} Active This Week`;
+    dashboardData.timeline = data;
+    renderTimeline(data);
   } catch (err) {
-    console.error('Actors error:', err);
+    document.getElementById('timeline-content').innerHTML = '<div class="empty-state">Failed to load timeline</div>';
   }
 }
 
-async function loadSectorData(sector) {
-  try {
-    const res = await fetch(`${API_BASE}/sectorThreats?sector=${sector}`);
-    const data = await res.json();
-    threatData.sectors[sector] = data;
-    renderSectorData(data);
-  } catch (err) {
-    console.error('Sector error:', err);
-  }
-}
-
-async function loadGeoData() {
-  try {
-    const res = await fetch(`${API_BASE}/geoThreats`);
-    const data = await res.json();
-    threatData.geo = data;
-    renderGeoData(data);
-  } catch (err) {
-    console.error('Geo error:', err);
-  }
-}
-
-// ============================================
-// RENDERING FUNCTIONS
-// ============================================
-function renderExecutiveSummary(data) {
-  const level = data.threatLevel?.level?.toLowerCase() || 'medium';
-  const score = data.threatLevel?.score || 50;
+function renderExecutiveDashboard(data) {
+  const posture = data.threatPosture;
+  const level = posture?.level?.toLowerCase() || 'moderate';
+  const score = posture?.score || 50;
   
-  // Update threat ring
-  const ring = document.getElementById('threat-ring-progress');
-  const circumference = 327; // 2 * PI * 52
-  const offset = circumference - (score / 100) * circumference;
+  const ring = document.getElementById('posture-ring');
+  const offset = 283 - (score / 100) * 283;
   ring.style.strokeDashoffset = offset;
-  ring.className = `threat-ring-value ${level}`;
+  ring.className = `ring-value ${level}`;
   
-  // Update score display
-  document.getElementById('threat-score').textContent = score;
+  document.getElementById('posture-score').textContent = score;
   
-  // Update level label
-  const levelLabel = document.getElementById('threat-level');
-  levelLabel.textContent = data.threatLevel?.level || 'MODERATE';
-  levelLabel.className = `threat-level-label ${level}`;
+  const title = document.getElementById('posture-title');
+  title.textContent = `Threat Level: ${posture?.level || 'MODERATE'}`;
+  title.className = `posture-title ${level}`;
   
-  // Update summary stats
-  document.getElementById('stat-ransomware-24h').textContent = data.summary?.ransomware_victims_24h || 0;
-  document.getElementById('stat-ransomware-7d').textContent = data.summary?.ransomware_victims_7d || 0;
-  document.getElementById('stat-iocs').textContent = formatNumber(data.summary?.active_iocs || 0);
-  document.getElementById('stat-kev').textContent = data.summary?.new_kev_cves || 0;
+  const trendText = posture?.trend === 'INCREASING' ? '📈 Threat activity is increasing' :
+                    posture?.trend === 'DECREASING' ? '📉 Threat activity is decreasing' : '➡️ Threat activity is stable';
+  document.getElementById('posture-trend').textContent = trendText;
   
-  // Update trend indicator
-  const trend = data.threatLevel?.trend || 'STABLE';
-  const trendEl = document.getElementById('trend-ransomware');
-  if (trend === 'INCREASING') {
-    trendEl.className = 'summary-trend up';
-    trendEl.textContent = '↑ Increasing';
-  } else if (trend === 'DECREASING') {
-    trendEl.className = 'summary-trend down';
-    trendEl.textContent = '↓ Decreasing';
-  } else {
-    trendEl.className = 'summary-trend stable';
-    trendEl.textContent = '→ Stable';
-  }
-  
-  // Update recommendations
-  const recs = data.recommendations || [];
-  if (recs[0]) {
-    document.getElementById('rec-1').innerHTML = `<span class="rec-icon">⚡</span><span>${escapeHtml(recs[0].action)}</span>`;
-    document.getElementById('rec-1').className = `rec-item ${recs[0].priority?.toLowerCase() || 'urgent'}`;
-  }
-  if (recs[1]) {
-    document.getElementById('rec-2').innerHTML = `<span class="rec-icon">🔒</span><span>${escapeHtml(recs[1].action)}</span>`;
-    document.getElementById('rec-2').className = `rec-item ${recs[1].priority?.toLowerCase() || 'high'}`;
-  }
-  if (recs[2]) {
-    document.getElementById('rec-3').innerHTML = `<span class="rec-icon">📋</span><span>${escapeHtml(recs[2].action)}</span>`;
-    document.getElementById('rec-3').className = `rec-item ${recs[2].priority?.toLowerCase() || 'medium'}`;
-  }
-}
-
-function renderFallbackSummary(data) {
-  // Fallback rendering using basic threatfeed data
-  const summary = data.summary || {};
-  document.getElementById('stat-ransomware-24h').textContent = summary.ransomware_victims || 0;
-  document.getElementById('stat-iocs').textContent = formatNumber(summary.threatfox_iocs || 0);
-  document.getElementById('threat-score').textContent = '50';
-  document.getElementById('threat-level').textContent = 'MODERATE';
-}
-
-function renderTrending(data) {
-  // Render trending malware
-  const malwareEl = document.getElementById('trending-malware');
-  if (data.trendingMalware?.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Malware Family</th><th>IoCs</th><th>MITRE Techniques</th></tr></thead><tbody>';
-    data.trendingMalware.slice(0, 8).forEach(m => {
-      const techniques = (m.mitreTechniques || []).slice(0, 3).map(t => 
-        `<span class="technique-tag">${t}</span>`
-      ).join('');
-      html += `<tr>
-        <td><strong>${escapeHtml(m.name)}</strong></td>
-        <td><span class="summary-value" style="font-size:16px;color:var(--accent-blue)">${m.iocCount}</span></td>
-        <td>${techniques}</td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    malwareEl.innerHTML = html;
-  } else {
-    malwareEl.innerHTML = '<div class="empty-state">No trending malware data</div>';
-  }
-  
-  // Render trending ransomware
-  const ransomEl = document.getElementById('trending-ransomware');
-  if (data.trendingRansomware?.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Group</th><th>Victims (7d)</th><th>Trend</th></tr></thead><tbody>';
-    data.trendingRansomware.slice(0, 8).forEach(r => {
-      const trendClass = r.trend === 'HOT' ? 'hot' : 'rising';
-      html += `<tr>
-        <td><strong>${escapeHtml(r.name)}</strong></td>
-        <td><span class="summary-value" style="font-size:16px;color:var(--threat-critical)">${r.victimsThisWeek}</span></td>
-        <td><span class="trend-indicator ${trendClass}">${r.trend === 'HOT' ? '🔥 HOT' : '📈 Active'}</span></td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    ransomEl.innerHTML = html;
-  } else {
-    ransomEl.innerHTML = '<div class="empty-state">No trending ransomware data</div>';
-  }
-  
-  // Render URL threats
-  const urlEl = document.getElementById('trending-urls');
-  if (data.trendingUrlThreats?.length > 0) {
-    let html = '<div style="display:flex;flex-wrap:wrap;gap:12px;">';
-    data.trendingUrlThreats.forEach(u => {
-      html += `<div style="background:var(--bg-elevated);padding:12px 16px;border-radius:8px;border:1px solid var(--border-subtle);min-width:150px;text-align:center;">
-        <div style="font-size:24px;font-weight:700;color:var(--accent-cyan);font-family:var(--font-mono);">${u.count}</div>
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">${escapeHtml(u.type)}</div>
-      </div>`;
-    });
-    html += '</div>';
-    urlEl.innerHTML = html;
-  } else {
-    urlEl.innerHTML = '<div class="empty-state">No URL threat data</div>';
-  }
-}
-
-function renderRansomware(data) {
-  const el = document.getElementById('ransomware-table');
-  const victims = data.recent_victims || [];
-  
-  if (victims.length === 0) {
-    el.innerHTML = '<div class="empty-state">No recent ransomware victims</div>';
-    return;
-  }
-  
-  let html = '<table class="data-table"><thead><tr><th>Victim</th><th>Group</th><th>Country</th><th>Discovered</th></tr></thead><tbody>';
-  victims.slice(0, 30).forEach(v => {
-    const date = v.discovered || v.published;
-    html += `<tr>
-      <td><strong>${escapeHtml(v.victim || 'Unknown')}</strong></td>
-      <td><span class="trend-indicator hot">${escapeHtml(v.group_name || 'Unknown')}</span></td>
-      <td>${escapeHtml(v.country || '—')}</td>
-      <td style="color:var(--text-muted);font-size:12px;">${timeAgo(date)}</td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
-  el.innerHTML = html;
-}
-
-function renderActors(data) {
-  const el = document.getElementById('actors-grid');
-  const actors = data.actors || [];
-  
-  if (actors.length === 0) {
-    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">No threat actor data available</div>';
-    return;
-  }
-  
-  let html = '';
-  actors.filter(a => a.activity?.last7days > 0).slice(0, 12).forEach(actor => {
-    const riskClass = actor.riskLevel?.toLowerCase() || 'medium';
-    const techniques = (actor.mitreTechniques || []).slice(0, 4).map(t => 
-      `<span class="technique-tag">${t}</span>`
-    ).join('');
-    
-    const trendIcon = actor.activity?.trend === 'INCREASING' ? '📈' : 
-                      actor.activity?.trend === 'DECREASING' ? '📉' : '➡️';
-    
-    html += `<div class="actor-card">
-      <div class="actor-header">
-        <div class="actor-name">${escapeHtml(actor.name)}</div>
-        <div class="actor-risk ${riskClass}">${actor.riskLevel}</div>
+  const factorsEl = document.getElementById('posture-factors');
+  if (posture?.factors?.length) {
+    factorsEl.innerHTML = posture.factors.slice(0, 4).map(f => `
+      <div class="factor-item">
+        <span class="factor-level ${f.level?.toLowerCase()}">${f.level}</span>
+        <span class="factor-detail">${escapeHtml(f.detail)}</span>
       </div>
-      <div class="actor-stats">
-        <div class="actor-stat">
-          <div class="actor-stat-value" style="color:var(--threat-critical)">${actor.activity?.last7days || 0}</div>
-          <div class="actor-stat-label">This Week</div>
-        </div>
-        <div class="actor-stat">
-          <div class="actor-stat-value">${actor.victimCount || 0}</div>
-          <div class="actor-stat-label">Total</div>
-        </div>
-        <div class="actor-stat">
-          <div class="actor-stat-value">${trendIcon}</div>
-          <div class="actor-stat-label">Trend</div>
-        </div>
+    `).join('');
+  }
+  
+  document.getElementById('metric-ransomware-24h').textContent = data.metrics?.ransomware?.last24h || 0;
+  document.getElementById('metric-kev').textContent = data.metrics?.vulnerabilities?.newKEV7d || 0;
+  document.getElementById('metric-campaigns').textContent = data.metrics?.campaigns?.active || 0;
+  document.getElementById('metric-iocs').textContent = formatNumber(data.metrics?.indicators?.highConfidence || 0);
+  
+  renderEmergingThreats(data.emergingThreats || []);
+}
+
+function renderEmergingThreats(threats) {
+  const el = document.getElementById('emerging-threats');
+  if (!threats.length) { el.innerHTML = '<div class="empty-state">No emerging threats detected</div>'; return; }
+  el.innerHTML = threats.map(t => `
+    <div class="threat-card ${t.severity?.toLowerCase()}">
+      <div class="threat-card-header">
+        <h4 class="threat-card-title">${escapeHtml(t.title)}</h4>
+        <span class="threat-severity ${t.severity?.toLowerCase()}">${t.severity}</span>
       </div>
-      <div class="actor-techniques">${techniques}</div>
+      <p class="threat-card-summary">${escapeHtml(t.summary)}</p>
+      <div class="threat-card-action">
+        <span class="icon">${t.activeExploitation ? '⚡' : '📋'}</span>
+        <span>${escapeHtml(t.actionRequired)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderThreatsTable() {
+  const el = document.getElementById('threats-table');
+  const threats = dashboardData.filteredThreats;
+  if (!threats.length) { el.innerHTML = '<div class="empty-state">No threats match your filters</div>'; return; }
+  
+  el.innerHTML = `
+    <table class="threats-table">
+      <thead><tr><th>Indicator</th><th>Type</th><th>Malware</th><th>Relevance</th><th>Score</th><th>Action</th><th>Source</th><th></th></tr></thead>
+      <tbody>
+        ${threats.slice(0, 50).map(t => `
+          <tr>
+            <td class="indicator-cell" title="${escapeHtml(t.indicator)}">${escapeHtml(t.indicator)}</td>
+            <td>${escapeHtml(t.type)}</td>
+            <td>${t.malwareFamily ? escapeHtml(t.malwareFamily) : '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td><span class="relevance-badge ${t.relevanceLevel?.toLowerCase()}">${t.relevanceLevel}</span></td>
+            <td class="score-cell">${t.relevanceScore}</td>
+            <td><span class="action-badge ${getActionClass(t.recommendedAction?.action)}">${formatAction(t.recommendedAction?.action)}</span></td>
+            <td style="color:var(--text-muted)">${escapeHtml(t.source)}</td>
+            <td><button class="view-btn" onclick="viewThreat('${t.id}')">Details</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderCampaigns() {
+  const el = document.getElementById('campaigns-grid');
+  const campaigns = dashboardData.campaigns;
+  if (!campaigns.length) { el.innerHTML = '<div class="empty-state">No active campaigns detected</div>'; return; }
+  
+  el.innerHTML = campaigns.slice(0, 12).map(c => `
+    <div class="campaign-card">
+      <div class="campaign-header">
+        <div>
+          <h4 class="campaign-name">${escapeHtml(c.name)}</h4>
+          <span class="campaign-type">${c.type?.replace('_', ' ')}</span>
+        </div>
+        <span class="campaign-status ${c.status?.toLowerCase()}">${c.status}</span>
+      </div>
+      <div class="campaign-body">
+        <div class="campaign-stats">
+          <div class="campaign-stat">
+            <div class="campaign-stat-value" style="color:var(--critical)">${c.indicatorCount || c.victimCount || 0}</div>
+            <div class="campaign-stat-label">${c.type === 'ransomware' ? 'Victims' : 'IoCs'}</div>
+          </div>
+          <div class="campaign-stat">
+            <div class="campaign-stat-value">${c.indicatorTypes?.length || c.countriesTargeted?.length || 0}</div>
+            <div class="campaign-stat-label">${c.type === 'ransomware' ? 'Countries' : 'Types'}</div>
+          </div>
+          <div class="campaign-stat">
+            <div class="campaign-stat-value">${c.severity}</div>
+            <div class="campaign-stat-label">Severity</div>
+          </div>
+        </div>
+        ${c.mitre?.techniques?.length ? `<div class="campaign-mitre">${c.mitre.techniques.slice(0, 4).map(t => `<span class="mitre-tag">${t}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRansomware() {
+  const data = dashboardData.ransomware;
+  if (!data) return;
+  
+  const victimsEl = document.getElementById('ransomware-victims');
+  const victims = data.recentVictims || [];
+  victimsEl.innerHTML = victims.length ? victims.slice(0, 30).map(v => `
+    <div class="victim-row">
+      <div class="victim-info">
+        <span class="victim-name">${escapeHtml(v.victim)}</span>
+        <span class="victim-meta">${escapeHtml(v.country || 'Unknown')} • ${v.sector !== 'unknown' ? escapeHtml(v.sector) : ''} • ${timeAgo(v.discovered)}</span>
+      </div>
+      <span class="victim-group">${escapeHtml(v.group)}</span>
+    </div>
+  `).join('') : '<div class="empty-state">No recent victims</div>';
+  
+  const groupsEl = document.getElementById('ransomware-groups');
+  const groups = data.groupIntelligence || [];
+  if (groups.length) {
+    groupsEl.innerHTML = `<h4 style="margin-bottom:var(--space-md);font-size:14px;">Threat Actor Activity</h4>` +
+      groups.slice(0, 10).map(g => `
+        <div class="group-card">
+          <div class="group-header">
+            <span class="group-name">${escapeHtml(g.name)}</span>
+            <span class="group-level ${g.activityLevel?.toLowerCase()}">${g.activityLevel}</span>
+          </div>
+          <div class="group-stats"><span>24h: <strong>${g.last24h}</strong></span><span>7d: <strong>${g.last7d}</strong></span><span>Total: <strong>${g.totalVictims}</strong></span></div>
+        </div>
+      `).join('');
+  }
+}
+
+function renderTimeline(data) {
+  const el = document.getElementById('timeline-content');
+  const timeline = data.timeline || [];
+  if (!timeline.length) { el.innerHTML = '<div class="empty-state">No timeline data</div>'; return; }
+  
+  const maxR = Math.max(...timeline.map(d => d.ransomwareVictims), 1);
+  const maxI = Math.max(...timeline.map(d => d.newIoCs), 1);
+  
+  let html = `<div style="display:flex;gap:var(--space-lg);margin-bottom:var(--space-lg);">
+    <div style="display:flex;align-items:center;gap:var(--space-sm);"><span style="width:16px;height:16px;background:var(--critical);border-radius:4px;"></span><span style="font-size:12px;color:var(--text-secondary);">Ransomware</span></div>
+    <div style="display:flex;align-items:center;gap:var(--space-sm);"><span style="width:16px;height:16px;background:var(--info);border-radius:4px;"></span><span style="font-size:12px;color:var(--text-secondary);">IoCs</span></div>
+  </div><div class="timeline-chart">`;
+  
+  timeline.forEach(day => {
+    html += `<div class="timeline-row">
+      <span class="timeline-date">${formatDate(day.date)}</span>
+      <div class="timeline-bar-wrap">
+        <div class="timeline-bar ransomware" style="width:${(day.ransomwareVictims/maxR)*40}%"></div>
+        <div class="timeline-bar iocs" style="width:${(day.newIoCs/maxI)*40}%"></div>
+      </div>
+      <span class="timeline-value">${day.ransomwareVictims} / ${day.newIoCs}</span>
     </div>`;
   });
-  
-  el.innerHTML = html || '<div class="empty-state" style="grid-column:1/-1;">No active threat actors this week</div>';
-}
-
-function renderSectorData(data) {
-  const el = document.getElementById('sector-data');
-  const titleEl = document.getElementById('sector-title');
-  const riskEl = document.getElementById('sector-risk');
-  
-  const sectorNames = {
-    all: 'All Sectors',
-    healthcare: '🏥 Healthcare / Pharma',
-    finance: '🏦 Finance / Banking',
-    technology: '💻 Technology',
-    manufacturing: '🏭 Manufacturing',
-    energy: '⚡ Energy / Utilities',
-    government: '🏛️ Government',
-    education: '🎓 Education'
-  };
-  
-  titleEl.innerHTML = `<span class="icon">🏢</span> ${sectorNames[data.sector] || data.sector} - Threat Analysis`;
-  riskEl.textContent = `Risk Score: ${data.riskScore || 0}`;
-  riskEl.style.background = data.riskScore > 70 ? 'var(--threat-critical)' : 
-                             data.riskScore > 40 ? 'var(--threat-high)' : 'var(--accent-blue)';
-  
-  if (!data.recentVictims?.length && !data.attackingGroups?.length) {
-    el.innerHTML = '<div class="empty-state">No threats found for this sector</div>';
-    return;
-  }
-  
-  let html = '<div class="grid-2">';
-  
-  // Recent victims
-  html += '<div><h4 style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">Recent Victims</h4>';
-  if (data.recentVictims?.length > 0) {
-    html += '<div style="display:flex;flex-direction:column;gap:8px;">';
-    data.recentVictims.slice(0, 10).forEach(v => {
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-elevated);border-radius:6px;">
-        <span style="font-weight:600;">${escapeHtml(v.name)}</span>
-        <span class="trend-indicator hot">${escapeHtml(v.group)}</span>
-      </div>`;
-    });
-    html += '</div>';
-  } else {
-    html += '<p style="color:var(--text-muted);">No recent victims</p>';
-  }
   html += '</div>';
   
-  // Attacking groups
-  html += '<div><h4 style="margin-bottom:12px;font-size:13px;color:var(--text-muted);">Top Attacking Groups</h4>';
-  if (data.attackingGroups?.length > 0) {
-    html += '<div style="display:flex;flex-direction:column;gap:8px;">';
-    data.attackingGroups.slice(0, 8).forEach(g => {
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg-elevated);border-radius:6px;">
-        <span style="font-weight:600;">${escapeHtml(g.name)}</span>
-        <span style="color:var(--threat-critical);font-weight:700;">${g.attackCount} attacks</span>
-      </div>`;
-    });
-    html += '</div>';
-  } else {
-    html += '<p style="color:var(--text-muted);">No attacking groups</p>';
+  if (data.anomalies?.length) {
+    html += `<div style="margin-top:var(--space-lg);padding:var(--space-md);background:var(--high-bg);border-radius:var(--radius-sm);">
+      <strong style="color:var(--high);">⚠️ Anomalies</strong>
+      <ul style="margin-top:var(--space-sm);padding-left:20px;color:var(--text-secondary);font-size:13px;">
+        ${data.anomalies.map(a => `<li>${escapeHtml(a.detail)}</li>`).join('')}
+      </ul>
+    </div>`;
   }
-  html += '</div></div>';
-  
   el.innerHTML = html;
 }
 
-function renderGeoData(data) {
-  // Render victim countries
-  const victimsEl = document.getElementById('geo-victims');
-  if (data.victimDistribution?.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Country</th><th>Victims</th><th>%</th></tr></thead><tbody>';
-    const total = data.totals?.total_victims || 1;
-    data.victimDistribution.slice(0, 15).forEach(c => {
-      const pct = ((c.victims / total) * 100).toFixed(1);
-      html += `<tr>
-        <td><strong>${escapeHtml(c.country)}</strong></td>
-        <td style="color:var(--threat-critical);font-weight:700;">${c.victims}</td>
-        <td style="color:var(--text-muted);">${pct}%</td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    victimsEl.innerHTML = html;
-  } else {
-    victimsEl.innerHTML = '<div class="empty-state">No geographic data</div>';
-  }
-  
-  // Render C2 server countries
-  const c2El = document.getElementById('geo-c2');
-  if (data.c2Distribution?.length > 0) {
-    let html = '<table class="data-table"><thead><tr><th>Country</th><th>C2 Servers</th><th>%</th></tr></thead><tbody>';
-    const total = data.totals?.total_c2 || 1;
-    data.c2Distribution.slice(0, 15).forEach(c => {
-      const pct = ((c.servers / total) * 100).toFixed(1);
-      html += `<tr>
-        <td><strong>${escapeHtml(c.country)}</strong></td>
-        <td style="color:var(--accent-purple);font-weight:700;">${c.servers}</td>
-        <td style="color:var(--text-muted);">${pct}%</td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    c2El.innerHTML = html;
-  } else {
-    c2El.innerHTML = '<div class="empty-state">No C2 server data</div>';
-  }
-}
-
-// ============================================
-// IOC LOOKUP
-// ============================================
 async function lookupIoC() {
-  const type = document.getElementById('ioc-type').value;
-  const value = document.getElementById('ioc-value').value.trim();
+  const type = document.getElementById('lookup-type').value;
+  const value = document.getElementById('lookup-value').value.trim();
+  if (!value) { showToast('Enter an indicator', 'error'); return; }
   
-  if (!value) {
-    showToast('Please enter an IoC value', 'error');
-    return;
-  }
-  
-  const resultsEl = document.getElementById('ioc-results');
-  resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div>Searching threat intelligence sources...</div>';
-  resultsEl.classList.add('active');
+  const el = document.getElementById('lookup-results');
+  el.innerHTML = '<div class="loading-state"><div class="spinner"></div>Analyzing...</div>';
   
   try {
-    const res = await fetch(`${API_BASE}/ioclookup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`${API_BASE}/iocEnrichment`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, value })
     });
     const data = await res.json();
-    renderIoCResults(data);
+    renderLookupResults(data);
   } catch (err) {
-    console.error('IoC lookup error:', err);
-    resultsEl.innerHTML = '<div class="empty-state">Failed to search IoC. Please try again.</div>';
+    el.innerHTML = '<div class="empty-state">Failed to analyze indicator</div>';
   }
 }
 
-function renderIoCResults(data) {
-  const el = document.getElementById('ioc-results');
+function renderLookupResults(data) {
+  const el = document.getElementById('lookup-results');
+  const vc = data.verdict?.toLowerCase() || 'unknown';
+  const vi = data.verdict === 'MALICIOUS' ? '☠️' : data.verdict === 'SUSPICIOUS' ? '⚠️' : '❓';
   
-  const verdictClass = data.verdict?.toLowerCase() || 'clean';
-  const verdictIcon = data.verdict === 'MALICIOUS' ? '☠️' : 
-                      data.verdict === 'SUSPICIOUS' ? '⚠️' : '✅';
-  
-  let html = `
-    <div style="text-align:center;margin-bottom:24px;">
-      <div class="verdict-badge ${verdictClass}">${verdictIcon} ${data.verdict || 'CLEAN'}</div>
-      <p style="margin-top:12px;color:var(--text-muted);font-size:13px;">
-        Searched: <code class="ioc-value">${escapeHtml(data.value)}</code>
-      </p>
+  el.innerHTML = `
+    <div class="lookup-verdict">
+      <div class="verdict-badge-lg ${vc}">${vi} ${data.verdict || 'UNKNOWN'}</div>
+      <div class="verdict-confidence">Confidence: ${data.confidence || 0}%</div>
     </div>
-    <div class="grid-2">
-  `;
-  
-  // ThreatFox results
-  html += '<div class="card"><div class="card-header"><h3 class="card-title">🦊 ThreatFox</h3></div><div class="card-body">';
-  if (data.sources?.threatfox?.query_status === 'ok' && data.sources.threatfox.data?.length > 0) {
-    const tf = data.sources.threatfox.data[0];
-    html += `
-      <p><strong>Malware:</strong> ${escapeHtml(tf.malware_printable || 'Unknown')}</p>
-      <p><strong>Threat Type:</strong> ${escapeHtml(tf.threat_type || 'Unknown')}</p>
-      <p><strong>First Seen:</strong> ${tf.first_seen || 'Unknown'}</p>
-      <p><strong>Confidence:</strong> ${tf.confidence_level || 'Unknown'}%</p>
-    `;
-  } else {
-    html += '<p style="color:var(--text-muted);">Not found in ThreatFox</p>';
-  }
-  html += '</div></div>';
-  
-  // URLhaus results
-  html += '<div class="card"><div class="card-header"><h3 class="card-title">🔗 URLhaus</h3></div><div class="card-body">';
-  if (data.sources?.urlhaus?.query_status === 'ok') {
-    const uh = data.sources.urlhaus;
-    html += `
-      <p><strong>Status:</strong> ${escapeHtml(uh.url_status || uh.host_status || 'Unknown')}</p>
-      <p><strong>Threat:</strong> ${escapeHtml(uh.threat || 'Unknown')}</p>
-      ${uh.blacklists ? `<p><strong>Blacklists:</strong> ${Object.values(uh.blacklists).filter(v => v === 'listed').length} hits</p>` : ''}
-    `;
-  } else {
-    html += '<p style="color:var(--text-muted);">Not found in URLhaus</p>';
-  }
-  html += '</div></div>';
-  
-  // MalwareBazaar results
-  if (data.sources?.malwarebazaar) {
-    html += '<div class="card" style="grid-column:1/-1;"><div class="card-header"><h3 class="card-title">🦠 MalwareBazaar</h3></div><div class="card-body">';
-    if (data.sources.malwarebazaar.query_status === 'ok' && data.sources.malwarebazaar.data?.length > 0) {
-      const mb = data.sources.malwarebazaar.data[0];
-      html += `
-        <div class="grid-2">
-          <div>
-            <p><strong>File Type:</strong> ${escapeHtml(mb.file_type || 'Unknown')}</p>
-            <p><strong>Signature:</strong> ${escapeHtml(mb.signature || 'Unknown')}</p>
+    <div class="lookup-sources">
+      ${data.sources?.map(s => `
+        <div class="source-card">
+          <div class="source-header">
+            <span class="source-name">${escapeHtml(s.name)}</span>
+            <span class="source-status ${s.status?.toLowerCase()}">${s.status === 'FOUND' ? 'FOUND' : 'NOT FOUND'}</span>
           </div>
-          <div>
-            <p><strong>File Size:</strong> ${mb.file_size ? (mb.file_size / 1024).toFixed(2) + ' KB' : 'Unknown'}</p>
-            <p><strong>First Seen:</strong> ${mb.first_seen || 'Unknown'}</p>
+          <div class="source-details">
+            ${s.status === 'FOUND' && s.details ? Object.entries(s.details).filter(([k,v]) => v).slice(0, 4).map(([k, v]) => `<p><strong>${formatKey(k)}:</strong> ${escapeHtml(String(v))}</p>`).join('') : '<p style="color:var(--text-muted)">No data</p>'}
           </div>
         </div>
-      `;
-    } else {
-      html += '<p style="color:var(--text-muted);">Not found in MalwareBazaar</p>';
-    }
-    html += '</div></div>';
-  }
-  
-  html += '</div>';
-  el.innerHTML = html;
+      `).join('') || ''}
+    </div>
+    <div class="lookup-recommendations">
+      <h4>📋 Recommended Actions</h4>
+      <div class="rec-list">
+        ${data.recommendations?.map(r => `<div class="rec-item ${r.priority?.toLowerCase()}"><span class="rec-action">${escapeHtml(r.action)}</span><span class="rec-detail">${escapeHtml(r.detail)}</span></div>`).join('') || '<p>No recommendations</p>'}
+      </div>
+    </div>
+  `;
 }
 
-// ============================================
-// UI FUNCTIONS
-// ============================================
-function switchPanel(panelId) {
-  // Update tabs
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.panel === panelId);
+function viewThreat(id) {
+  const t = dashboardData.threats.find(x => x.id === id);
+  if (!t) return;
+  
+  document.getElementById('threat-modal-title').textContent = `Threat: ${t.type}`;
+  document.getElementById('threat-modal-body').innerHTML = `
+    <div style="margin-bottom:var(--space-lg);"><label style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Indicator</label>
+      <p style="font-family:var(--font-mono);color:var(--accent);word-break:break-all;">${escapeHtml(t.indicator)}</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg);margin-bottom:var(--space-lg);">
+      <div><label style="font-size:11px;color:var(--text-muted);">Score</label><p style="font-size:24px;font-weight:700;">${t.relevanceScore}/100</p></div>
+      <div><label style="font-size:11px;color:var(--text-muted);">Action</label><p><span class="action-badge ${getActionClass(t.recommendedAction?.action)}">${formatAction(t.recommendedAction?.action)}</span></p></div>
+    </div>
+    ${t.scoringFactors?.length ? `<div style="margin-bottom:var(--space-lg);"><label style="font-size:11px;color:var(--text-muted);">Scoring Factors</label>${t.scoringFactors.map(f => `<div style="display:flex;justify-content:space-between;padding:var(--space-sm) 0;border-bottom:1px solid var(--border-subtle);"><span>${escapeHtml(f.factor)}</span><span style="color:var(--accent);">+${f.points}</span></div>`).join('')}</div>` : ''}
+    ${t.recommendedAction?.steps?.length ? `<div><label style="font-size:11px;color:var(--text-muted);">Steps</label><ol style="padding-left:20px;color:var(--text-secondary);">${t.recommendedAction.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ol></div>` : ''}
+  `;
+  openModal('threat-modal');
+}
+
+function filterThreats() {
+  const rel = document.getElementById('filter-relevance').value;
+  const act = document.getElementById('filter-action').value;
+  const search = document.getElementById('filter-search').value.toLowerCase();
+  
+  dashboardData.filteredThreats = dashboardData.threats.filter(t => {
+    if (rel !== 'all' && ((rel === 'HIGH' && t.relevanceLevel !== 'HIGH') || (rel === 'MEDIUM' && t.relevanceLevel === 'LOW'))) return false;
+    if (act !== 'all' && t.recommendedAction?.action !== act) return false;
+    if (search && !`${t.indicator} ${t.malwareFamily || ''} ${t.source}`.toLowerCase().includes(search)) return false;
+    return true;
   });
-  
-  // Update panels
-  document.querySelectorAll('.panel').forEach(panel => {
-    panel.classList.toggle('active', panel.id === `panel-${panelId}`);
-  });
-  
-  // Load sector data if needed
-  if (panelId === 'sectors' && !threatData.sectors[currentSector]) {
-    loadSectorData(currentSector);
-  }
+  renderThreatsTable();
 }
 
-function selectSector(sector) {
-  currentSector = sector;
-  
-  // Update buttons
-  document.querySelectorAll('.sector-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.sector === sector);
-  });
-  
-  // Load sector data
-  if (threatData.sectors[sector]) {
-    renderSectorData(threatData.sectors[sector]);
-  } else {
-    document.getElementById('sector-data').innerHTML = '<div class="loading"><div class="spinner"></div>Loading sector data...</div>';
-    loadSectorData(sector);
-  }
+function refreshThreats() {
+  document.getElementById('threats-table').innerHTML = '<div class="loading-state"><div class="spinner"></div>Refreshing...</div>';
+  loadEnrichedThreats();
 }
 
-function refreshRansomware() {
-  document.getElementById('ransomware-table').innerHTML = '<div class="loading"><div class="spinner"></div>Refreshing...</div>';
-  loadRansomware();
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tabId}`));
 }
 
-function updateLastRefresh() {
-  const now = new Date();
-  document.getElementById('last-update').textContent = `Updated: ${now.toLocaleTimeString()}`;
-}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModalBg(e) { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active'); }
 
-// ============================================
-// MODALS
-// ============================================
-function openModal(id) {
-  document.getElementById(id).classList.add('active');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
-}
-
-function closeModalOnBg(e) {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('active');
-  }
-}
-
-// ============================================
-// FORMS
-// ============================================
 async function handleSubscribe(e) {
   e.preventDefault();
   const btn = document.getElementById('sub-btn');
-  btn.disabled = true;
-  btn.textContent = 'Subscribing...';
-  
-  const data = {
-    email: document.getElementById('sub-email').value,
-    company: document.getElementById('sub-company').value,
-    sector: document.getElementById('sub-sector').value,
-    frequency: document.getElementById('sub-frequency').value,
-    source: 'threat-dashboard'
-  };
-  
+  btn.disabled = true; btn.textContent = 'Subscribing...';
   try {
-    await fetch(`${API_BASE}/subscribe`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+    await fetch(`${API_BASE}/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('sub-email').value, company: document.getElementById('sub-company').value, sector: document.getElementById('sub-sector').value, frequency: document.getElementById('sub-frequency').value })
     });
-    showToast('✅ Subscribed successfully! Check your email.', 'success');
-    closeModal('subscribe-modal');
-    e.target.reset();
-  } catch (err) {
-    showToast('Subscription received! You will receive alerts at ' + data.email, 'success');
-    closeModal('subscribe-modal');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Subscribe to Alerts';
-  }
+    showToast('✅ Subscribed!', 'success'); closeModal('subscribe-modal'); e.target.reset();
+  } catch (err) { showToast('Subscribed!', 'success'); closeModal('subscribe-modal'); }
+  finally { btn.disabled = false; btn.textContent = 'Subscribe'; }
 }
 
-async function handleContact(e) {
-  e.preventDefault();
-  
-  const data = {
-    name: document.getElementById('contact-name').value,
-    email: document.getElementById('contact-email').value,
-    company: document.getElementById('contact-company').value,
-    service: document.getElementById('contact-service').value,
-    message: document.getElementById('contact-message').value
-  };
-  
-  try {
-    await fetch(`${API_BASE}/lead`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    showToast('✅ Request submitted! We will contact you soon.', 'success');
-  } catch (err) {
-    showToast('Request received! We will contact you at ' + data.email, 'success');
-  }
-  
-  closeModal('contact-modal');
-  e.target.reset();
+function exportReport() {
+  const data = { generatedAt: new Date().toISOString(), threatPosture: dashboardData.executive?.threatPosture, emergingThreats: dashboardData.executive?.emergingThreats, campaigns: dashboardData.campaigns?.filter(c => c.status === 'ACTIVE'), threats: dashboardData.threats?.filter(t => t.relevanceLevel === 'HIGH').slice(0, 20) };
+  downloadFile(JSON.stringify(data, null, 2), `cvepulse-report-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+  showToast('📊 Exported!', 'success');
 }
 
-// ============================================
-// EXPORT
-// ============================================
-function exportData() {
-  const data = {
-    exportDate: new Date().toISOString(),
-    executiveSummary: threatData.executive,
-    trending: threatData.trending,
-    ransomware: threatData.ransomware?.recent_victims?.slice(0, 50),
-    threatActors: threatData.actors?.actors?.slice(0, 20)
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cvepulse-threat-report-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  showToast('📥 Threat report exported!', 'success');
+function exportThreats() {
+  let csv = 'Indicator,Type,Malware,Relevance,Score,Action,Source\n';
+  dashboardData.filteredThreats.forEach(t => { csv += `"${t.indicator}","${t.type}","${t.malwareFamily || ''}","${t.relevanceLevel}","${t.relevanceScore}","${t.recommendedAction?.action || ''}","${t.source}"\n`; });
+  downloadFile(csv, `cvepulse-threats-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+  showToast('📥 Exported!', 'success');
 }
 
-// ============================================
-// UTILITIES
-// ============================================
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type }); const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
 }
 
-function formatNumber(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-  return n.toString();
+function updateLastRefresh() { document.getElementById('last-update').textContent = `Updated: ${new Date().toLocaleTimeString()}`; }
+
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toast-container'); const t = document.createElement('div');
+  t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4000);
 }
 
-function timeAgo(date) {
-  if (!date) return 'Unknown';
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-  if (seconds < 60) return 'Just now';
-  if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-  if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-  return Math.floor(seconds / 86400) + 'd ago';
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
+function formatNumber(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'K' : n.toString(); }
+function timeAgo(d) { if (!d) return 'Unknown'; const s = Math.floor((new Date() - new Date(d))/1000); return s < 60 ? 'Just now' : s < 3600 ? Math.floor(s/60)+'m ago' : s < 86400 ? Math.floor(s/3600)+'h ago' : Math.floor(s/86400)+'d ago'; }
+function formatDate(d) { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+function formatKey(k) { return k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()).replace(/_/g, ' '); }
+function formatAction(a) { return a ? a.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'; }
+function getActionClass(a) { return !a ? '' : a === 'BLOCK_IMMEDIATELY' ? 'block' : a === 'INVESTIGATE' ? 'investigate' : a === 'MONITOR' ? 'monitor' : 'track'; }
+function escapeHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
