@@ -23,7 +23,7 @@ const CVEPulseWebsite = () => {
     { name: 'Home', id: 'home' },
     { name: 'Services', id: 'services' },
     { name: 'CVE Intelligence', id: 'cve-dashboard', href: '/dashboard.html' },
-    { name: 'Threat Intelligence', id: 'threat-dashboard', href: '/threat-dashboard.html' },
+    { name: 'Threat Intelligence', id: 'threat-dashboard' },
     { name: 'About', id: 'about' },
     { name: 'Contact', id: 'contact' },
     { name: 'Privacy', id: 'privacy' },
