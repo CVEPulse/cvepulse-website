@@ -3,7 +3,7 @@ import { Shield, TrendingUp, Search, Mail, Phone, MapPin, CheckCircle, ArrowRigh
 import ProfessionalSecurityDashboard from './ProfessionalSecurityDashboard';
 
 // Phase 3 Components
-// Pricing moved to standalone /pricing.html
+import PricingModal from './components/PricingModal';
 import AlertsModal from './components/AlertsModal';
 import WatchlistManager from './components/WatchlistManager';
 
@@ -12,6 +12,7 @@ const CVEPulseWebsite = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Phase 3 State
+  const [showPricing, setShowPricing] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [watchlist, setWatchlist] = useState(
@@ -147,7 +148,51 @@ const CVEPulseWebsite = () => {
     { number: '100%', label: 'Threat Coverage' }
   ];
 
-  // Pricing now lives at /pricing.html (two-tab: Services + Dashboard Plans)
+  const packages = [
+    {
+      name: 'Starter',
+      price: 'Custom',
+      description: 'Perfect for SMBs and startups',
+      features: [
+        'VM Assessment',
+        'Basic Threat Intelligence Feed',
+        'SOC Alert Monitoring (Business Hours)',
+        'Monthly Reports',
+        'Email Support'
+      ],
+      cta: 'Get Started'
+    },
+    {
+      name: 'Professional',
+      price: 'Custom',
+      description: 'Ideal for mid-market enterprises',
+      features: [
+        'VM Program Management',
+        'Sector-Specific Threat Intelligence',
+        'Dark Web Monitoring',
+        '24/7 SOC Monitoring',
+        'Incident Response Support',
+        'Quarterly Executive Briefings'
+      ],
+      cta: 'Contact Sales',
+      popular: true
+    },
+    {
+      name: 'Enterprise',
+      price: 'Custom',
+      description: 'For large enterprises and regulated industries',
+      features: [
+        'Complete VM Program',
+        'Custom Threat Intelligence',
+        'Application Threat Modeling',
+        '24/7 MDR with Threat Hunting',
+        'Dedicated Security Team',
+        'Unlimited Incident Response',
+        'vCISO Advisory'
+      ],
+      cta: 'Schedule Demo'
+    }
+  ];
 
   // CVE Dashboard Component
   // CVE Dashboard Component - PROFESSIONAL SECURITY ANALYST DASHBOARD
@@ -680,13 +725,13 @@ const CVEPulseWebsite = () => {
               <TrendingUp className="w-5 h-5" />
               <span>View Live CVE Dashboard</span>
             </a>
-            <a 
-              href="/pricing.html"
+            <button 
+              onClick={() => setShowPricing(true)}
               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
             >
               <DollarSign className="w-5 h-5" />
               <span>View Pricing</span>
-            </a>
+            </button>
             <button 
               onClick={() => setCurrentPage('contact')}
               className="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all"
@@ -821,12 +866,12 @@ const CVEPulseWebsite = () => {
           <p className="text-xl text-cyan-50 mb-8">
             Schedule a consultation to discuss how CVEPulse can protect your organization
           </p>
-          <a 
-            href="/pricing.html"
+          <button 
+            onClick={() => setShowPricing(true)}
             className="px-8 py-4 bg-white text-cyan-600 rounded-lg font-bold text-lg hover:bg-slate-100 transition-all transform hover:scale-105"
           >
             View Pricing & Services
-          </a>
+          </button>
         </div>
       </section>
     </div>
@@ -886,12 +931,12 @@ const CVEPulseWebsite = () => {
         ))}
 
         <div className="text-center mt-12">
-          <a 
-            href="/pricing.html"
-            className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold text-lg hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105 inline-block"
+          <button 
+            onClick={() => setShowPricing(true)}
+            className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg font-bold text-lg hover:from-cyan-700 hover:to-blue-700 transition-all transform hover:scale-105"
           >
             Get a Quote
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -1249,13 +1294,13 @@ const CVEPulseWebsite = () => {
               )
             ))}
             {/* Pricing Button */}
-            <a
-              href="/pricing.html"
+            <button
+              onClick={() => setShowPricing(true)}
               className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center space-x-1"
             >
               <DollarSign className="w-4 h-4" />
               <span>Pricing</span>
-            </a>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -1296,12 +1341,15 @@ const CVEPulseWebsite = () => {
                 </button>
               )
             ))}
-            <a
-              href="/pricing.html"
-              className="block w-full text-left px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium"
+            <button
+              onClick={() => {
+                setShowPricing(true);
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium"
             >
               💼 Pricing
-            </a>
+            </button>
           </div>
         )}
       </div>
@@ -1336,7 +1384,7 @@ const CVEPulseWebsite = () => {
             <ul className="space-y-2 text-slate-400 text-sm">
               <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setCurrentPage('about')}>About Us</li>
               <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setCurrentPage('contact')}>Contact</li>
-              <li><a href="/pricing.html" className="hover:text-cyan-400 cursor-pointer">Pricing</a></li>
+              <li className="hover:text-cyan-400 cursor-pointer" onClick={() => setShowPricing(true)}>Pricing</li>
               <li onClick={() => setCurrentPage("privacy")} className="hover:text-cyan-400 cursor-pointer">Privacy Policy</li>
               <li onClick={() => setCurrentPage("terms")} className="hover:text-cyan-400 cursor-pointer">Terms of Service</li>
             </ul>
@@ -1387,6 +1435,10 @@ const CVEPulseWebsite = () => {
       <Footer />
       
       {/* Phase 3 Modals */}
+      <PricingModal 
+        isOpen={showPricing} 
+        onClose={() => setShowPricing(false)} 
+      />
       <AlertsModal 
         isOpen={showAlerts} 
         onClose={() => setShowAlerts(false)} 
