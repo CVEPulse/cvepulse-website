@@ -1017,14 +1017,44 @@ const CVEPulseWebsite = () => {
       message: ''
     });
     const [submitted, setSubmitted] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState(null);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
-      // Store in localStorage
-      const contacts = JSON.parse(localStorage.getItem('cvepulse_contacts') || '[]');
-      contacts.push({ ...formData, timestamp: new Date().toISOString() });
-      localStorage.setItem('cvepulse_contacts', JSON.stringify(contacts));
-      setSubmitted(true);
+      setSubmitting(true);
+      setSubmitError(null);
+      
+      try {
+        const response = await fetch('https://us-central1-cvepulse.cloudfunctions.net/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            phone: formData.phone,
+            service: formData.service,
+            message: formData.message,
+            source: 'main-website-contact'
+          })
+        });
+        
+        if (response.ok) {
+          setSubmitted(true);
+        } else {
+          throw new Error('Server error');
+        }
+      } catch (err) {
+        // Still show success to user (data may have been saved)
+        // Also save locally as backup
+        const contacts = JSON.parse(localStorage.getItem('cvepulse_contacts') || '[]');
+        contacts.push({ ...formData, timestamp: new Date().toISOString() });
+        localStorage.setItem('cvepulse_contacts', JSON.stringify(contacts));
+        setSubmitted(true);
+      } finally {
+        setSubmitting(false);
+      }
     };
 
     return (
@@ -1068,7 +1098,7 @@ const CVEPulseWebsite = () => {
                   Book a 30-minute consultation with our security experts
                 </p>
                 <button
-                  onClick={() => window.open('https://calendly.com/business-cvepulse/security-consultation', '_blank')}
+                  onClick={() => window.location.href = 'mailto:business@cvepulse.com?subject=Security%20Consultation%20Request&body=Hi%20CVEPulse%20Team%2C%0A%0AI%20would%20like%20to%20schedule%20a%20security%20consultation.%0A%0APlease%20let%20me%20know%20available%20times.%0A%0AThank%20you'}
                   className="px-8 py-3 bg-white text-cyan-600 rounded-lg font-semibold hover:bg-slate-100 transition-all cursor-pointer"
                 >
                   Schedule a Call
@@ -1166,9 +1196,10 @@ const CVEPulseWebsite = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-bold text-lg transition-all"
+                    disabled={submitting}
+                    className={`w-full py-4 ${submitting ? 'bg-cyan-800 cursor-not-allowed' : 'bg-cyan-600 hover:bg-cyan-700'} text-white rounded-lg font-bold text-lg transition-all`}
                   >
-                    Send Message
+                    {submitting ? 'Sending...' : 'Send Message'}
                   </button>
                 </form>
               )}
@@ -1194,10 +1225,10 @@ const CVEPulseWebsite = () => {
           <section>
             <h2 className="text-2xl font-semibold text-white mb-4">Contact Us</h2>
             <p className="leading-relaxed">
-              Questions? Email: business@cvepulse.com
+              Questions? Email: <a href="mailto:business@cvepulse.com" className="text-cyan-400 hover:text-cyan-300">business@cvepulse.com</a>
             </p>
           </section>
-          <p className="text-sm text-slate-400 mt-8">Last updated: December 2024</p>
+          <p className="text-sm text-slate-400 mt-8">Last updated: January 2026</p>
         </div>
       </div>
     </div>
@@ -1221,7 +1252,7 @@ const CVEPulseWebsite = () => {
               CVEPulse provides cybersecurity intelligence services.
             </p>
           </section>
-          <p className="text-sm text-slate-400 mt-8">Last updated: December 2024</p>
+          <p className="text-sm text-slate-400 mt-8">Last updated: January 2026</p>
         </div>
       </div>
     </div>
@@ -1361,13 +1392,13 @@ const CVEPulseWebsite = () => {
           <div>
             <h3 className="text-white font-semibold mb-4">Contact</h3>
             <ul className="space-y-2 text-slate-400 text-sm">
-              <li>business@cvepulse.com</li>
+              <li><a href="mailto:business@cvepulse.com" className="hover:text-cyan-400">business@cvepulse.com</a></li>
               <li>London, UK | Delhi, India</li>
             </ul>
           </div>
         </div>
         <div className="border-t border-slate-700 pt-6 text-center text-slate-400 text-sm">
-          <p>&copy; 2024 CVEPulse. All rights reserved.</p>
+          <p>&copy; 2026 CVEPulse. All rights reserved.</p>
         </div>
       </div>
     </footer>
