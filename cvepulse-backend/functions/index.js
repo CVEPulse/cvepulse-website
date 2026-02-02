@@ -961,3 +961,113 @@ exports.kevdata = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+/**
+ * VERIFY USER - Check if user exists and return their plan status
+ * Called by dashboard on load to verify session
+ */
+exports.verifyUser = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { email } = req.query;
+      if (!email) return res.status(400).json({ error: 'Email required' });
+      
+      // Check leads collection for this user
+      const leadsSnapshot = await db.collection('leads')
+        .where('email', '==', email)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+      
+      if (leadsSnapshot.empty) {
+        return res.status(200).json({ found: false });
+      }
+      
+      const leadDoc = leadsSnapshot.docs[0].data();
+      const service = leadDoc.service || '';
+      
+      // Determine plan from service field
+      let plan = 'community';
+      if (service.includes('Professional Upgrade') || service.includes('professional')) {
+        plan = 'professional';
+      } else if (service.includes('Enterprise')) {
+        plan = 'enterprise';
+      }
+      
+      // Check if user has paid status in subscribers
+      const subDoc = await db.collection('subscribers').doc(email).get();
+      const paid = subDoc.exists && subDoc.data().paid === true;
+      
+      res.status(200).json({
+        found: true,
+        email: leadDoc.email,
+        name: leadDoc.name,
+        company: leadDoc.company,
+        plan,
+        paid,
+        createdAt: leadDoc.createdAt
+      });
+      
+    } catch (error) {
+      console.error('Verify user error:', error);
+      res.status(500).json({ error: 'Verification failed' });
+    }
+  });
+});
+
+/**
+ * TRIAL STATUS - Admin endpoint to check all trial users and their expiry status
+ * GET /trialStatus — returns list of trial users with days remaining
+ */
+exports.trialStatus = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // Get all dashboard signups
+      const leadsSnapshot = await db.collection('leads')
+        .where('service', '>=', 'Dashboard')
+        .where('service', '<=', 'Dashboard\uf8ff')
+        .orderBy('service')
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      const trials = [];
+      const TRIAL_DAYS = 14;
+      
+      leadsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (!data.service?.includes('professional')) return;
+        
+        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+        const expiresAt = new Date(createdAt);
+        expiresAt.setDate(expiresAt.getDate() + TRIAL_DAYS);
+        const daysLeft = Math.ceil((expiresAt - new Date()) / (1000 * 60 * 60 * 24));
+        
+        trials.push({
+          name: data.name,
+          email: data.email,
+          company: data.company || '',
+          signedUp: createdAt.toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          daysLeft,
+          status: daysLeft > 0 ? 'ACTIVE' : 'EXPIRED',
+          message: data.message || ''
+        });
+      });
+      
+      // Sort: expired first, then by days left ascending
+      trials.sort((a, b) => a.daysLeft - b.daysLeft);
+      
+      res.status(200).json({
+        timestamp: new Date().toISOString(),
+        totalTrials: trials.length,
+        activeTrials: trials.filter(t => t.status === 'ACTIVE').length,
+        expiredTrials: trials.filter(t => t.status === 'EXPIRED').length,
+        trials
+      });
+      
+    } catch (error) {
+      console.error('Trial status error:', error);
+      res.status(500).json({ error: 'Failed to fetch trial status', details: error.message });
+    }
+  });
+});

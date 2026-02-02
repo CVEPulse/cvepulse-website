@@ -1,71 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-
-  <!-- Homepage -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.cvepulse.com/</loc>
-    <lastmod>2024-12-23</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
-
-  <!-- Services Page -->
   <url>
-    <loc>https://www.cvepulse.com/services</loc>
-    <lastmod>2024-12-23</lastmod>
+    <loc>https://www.cvepulse.com/threat-intelligence</loc>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cvepulse.com/vulnerability-management</loc>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cvepulse.com/threat-dashboard.html</loc>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.cvepulse.com/pricing.html</loc>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cvepulse.com/soc-monitoring</loc>
+    <lastmod>2026-02-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-
-  <!-- CVE Intelligence Dashboard -->
   <url>
-    <loc>https://www.cvepulse.com/cve-intelligence</loc>
-    <lastmod>2024-12-23</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://www.cvepulse.com/threat-modelling</loc>
+    <lastmod>2026-02-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
-
-  <!-- Threat Intelligence Dashboard -->
-  <url>
-    <loc>https://www.cvepulse.com/threat-intelligence</loc>
-    <lastmod>2024-12-23</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- About Page -->
   <url>
     <loc>https://www.cvepulse.com/about</loc>
-    <lastmod>2024-12-23</lastmod>
+    <lastmod>2026-02-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-
-  <!-- Contact Page -->
   <url>
     <loc>https://www.cvepulse.com/contact</loc>
-    <lastmod>2024-12-23</lastmod>
+    <lastmod>2026-02-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Privacy Policy -->
   <url>
     <loc>https://www.cvepulse.com/privacy</loc>
-    <lastmod>2024-12-23</lastmod>
+    <lastmod>2026-02-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-
-  <!-- Terms of Service -->
   <url>
     <loc>https://www.cvepulse.com/terms</loc>
-    <lastmod>2024-12-23</lastmod>
+    <lastmod>2026-02-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-
 </urlset>

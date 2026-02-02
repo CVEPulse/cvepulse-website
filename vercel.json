@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/threat-intelligence", "destination": "/threat-intelligence.html" },
+    { "source": "/cve-intelligence", "destination": "/threat-intelligence.html" },
+    { "source": "/vulnerability-management", "destination": "/vulnerability-management.html" },
+    { "source": "/soc-monitoring", "destination": "/soc-monitoring.html" },
+    { "source": "/threat-modelling", "destination": "/threat-modelling.html" }
+  ]
+}

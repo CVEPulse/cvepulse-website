@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <link rel="stylesheet" href="css/threat-dashboard.css">
+  <!-- Firebase Auth removed - using lightweight custom auth -->
 </head>
 <body>
   <div class="app-bg"></div>
@@ -377,7 +378,7 @@
         <a href="mailto:business@cvepulse.com">Contact</a>
       </div>
       <div class="footer-info">
-        <p>Data sources: CISA KEV, Abuse.ch, Ransomware.live</p>
+        <p>Data sources: CISA KEV, Ransomware.live</p>
         <p>All data is live • Auto-refreshes every 5 minutes</p>
         <p>© 2026 CVEPulse. All rights reserved.</p>
       </div>
@@ -385,5 +386,6 @@
   </footer>
 
   <script src="js/threat-dashboard.js"></script>
+  <script src="js/auth-gate.js"></script>
 </body>
 </html>
