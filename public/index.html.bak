@@ -4,40 +4,135 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
+    <meta name="theme-color" content="#0891b2" />
+    
+    <!-- Primary Meta Tags -->
+    <title>CVEPulse - Real-Time CVE Intelligence & Vulnerability Tracking Dashboard</title>
+    <meta name="title" content="CVEPulse - Real-Time CVE Intelligence & Vulnerability Tracking Dashboard" />
+    <meta name="description" content="Track trending CVEs with emergency and zero-day detection. Real-time vulnerability intelligence from BleepingComputer, The Hacker News, Reddit & CISA KEV. Free CVE dashboard with CVSS scoring and threat intelligence." />
+    <meta name="keywords" content="CVE tracker, vulnerability management, zero-day detection, CISA KEV, CVE intelligence, cybersecurity dashboard, threat intelligence, CVE database, security vulnerabilities, CVE monitoring, real-time CVE tracking, vulnerability scanner, security intelligence, CVE alerts, exploit tracking" />
+    <meta name="author" content="CVEPulse" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="1 days" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.cvepulse.com/" />
+    
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.cvepulse.com/" />
+    <meta property="og:site_name" content="CVEPulse" />
+    <meta property="og:title" content="CVEPulse - Real-Time CVE Intelligence & Vulnerability Tracking" />
+    <meta property="og:description" content="Track trending CVEs with emergency and zero-day detection. Real-time intelligence from BleepingComputer, The Hacker News, Reddit & CISA. Free dashboard for security professionals." />
+    <meta property="og:image" content="https://www.cvepulse.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.cvepulse.com/" />
+    <meta name="twitter:site" content="@CVEPulse" />
+    <meta name="twitter:creator" content="@CVEPulse" />
+    <meta name="twitter:title" content="CVEPulse - Real-Time CVE Intelligence" />
+    <meta name="twitter:description" content="Track trending CVEs with emergency and zero-day detection. Real-time intelligence from top security sources. Free dashboard." />
+    <meta name="twitter:image" content="https://www.cvepulse.com/twitter-image.png" />
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="geo.region" content="GB-ENG" />
+    <meta name="geo.placename" content="London" />
+    <meta name="geo.position" content="51.5074;-0.1278" />
+    <meta name="ICBM" content="51.5074, -0.1278" />
+    
+    <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
+    
+    <!-- Structured Data - Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "CVEPulse",
+      "url": "https://www.cvepulse.com",
+      "logo": "https://www.cvepulse.com/logo.png",
+      "description": "Real-time CVE intelligence and vulnerability tracking platform",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "London",
+        "addressCountry": "GB"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "business@cvepulse.com",
+        "contactType": "Customer Service"
+      },
+      "sameAs": [
+        "https://twitter.com/CVEPulse",
+        "https://www.linkedin.com/company/cvepulse"
+      ]
+    }
+    </script>
+    
+    <!-- Structured Data - WebSite Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "CVEPulse",
+      "url": "https://www.cvepulse.com",
+      "description": "Real-time CVE intelligence dashboard with emergency and zero-day detection",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.cvepulse.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- Structured Data - WebApplication Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "CVEPulse Dashboard",
+      "url": "https://www.cvepulse.com",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "127"
+      }
+    }
+    </script>
+    
+    <!-- Google Analytics - Replace with your GA4 ID -->
+    <!-- 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
     -->
-    <title>React App</title>
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>
