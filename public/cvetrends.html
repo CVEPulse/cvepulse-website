@@ -369,7 +369,10 @@ function CVETrendsDashboard() {
     setLoading(true); setError(null);
     setLoadingStage('Scanning 11 live threat intelligence sources...');
     try {
-      const url = `/api/scan${forceRefresh?'?refresh=true':''}`;
+      // API hosted on separate Vercel project (cvepulse-trending)
+      // Change this URL after deploying cvepulse-trending to Vercel
+      const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://trending.cvepulse.com';
+      const url = `${API_BASE}/api/scan${forceRefresh?'?refresh=true':''}`;
       const res = await fetch(url);
       if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error||`Server error: ${res.status}`); }
       const data = await res.json();
