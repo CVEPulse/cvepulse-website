@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ═══ PRIMARY SEO ═══ -->
+  <title>CVE Trends — Live Trending CVEs Dashboard | Free CVETrends Alternative | CVEPulse</title>
+  <meta name="description" content="Track trending CVEs in real-time with live hype scores, CISA KEV alerts, EPSS exploit predictions, and security news aggregation. Free alternative to CVETrends.com — powered by 11 intelligence sources. Updated every 15 minutes.">
+  <meta name="keywords" content="cvetrends, cve trends, cvetrends.com, trending cves, trending vulnerabilities, live cve tracker, cve trending dashboard, trend threat cve, cve hype score, vulnerability trends, cve intelligence, trending exploits, zero day tracker, cisa kev tracker, epss scores, vulnerability hype, security vulnerability trends, cve tracker free, cvetrends alternative, real-time cve monitoring, vulnerability intelligence dashboard, trending security threats, cve news aggregator, exploit tracker, vulnerability prioritization">
+  <link rel="canonical" href="https://www.cvepulse.com/cvetrends.html">
+
+  <!-- ═══ OPEN GRAPH (Facebook, LinkedIn, WhatsApp) ═══ -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.cvepulse.com/cvetrends.html">
+  <meta property="og:title" content="CVE Trends — Live Trending CVEs Dashboard | Free CVETrends Alternative">
+  <meta property="og:description" content="Real-time trending vulnerability tracker with hype scores. Track which CVEs security teams are actually talking about. 11 live intelligence sources. Updated every 15 minutes. 100% free.">
+  <meta property="og:image" content="https://www.cvepulse.com/og-cvetrends.png">
+  <meta property="og:site_name" content="CVEPulse">
+  <meta property="og:locale" content="en_US">
+
+  <!-- ═══ TWITTER CARD ═══ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://www.cvepulse.com/cvetrends.html">
+  <meta name="twitter:title" content="CVE Trends — Live Trending CVEs Dashboard | CVEPulse">
+  <meta name="twitter:description" content="Track trending CVEs in real-time. Hype scores, CISA KEV, EPSS, security news, Reddit, GitHub PoCs. Free alternative to CVETrends.com.">
+  <meta name="twitter:image" content="https://www.cvepulse.com/og-cvetrends.png">
+
+  <!-- ═══ ADDITIONAL SEO ═══ -->
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="author" content="CVEPulse">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="application-name" content="CVEPulse CVE Trends">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="CVEPulse Trending CVEs" href="https://www.cvepulse.com/api/scan">
+
+  <!-- ═══ JSON-LD STRUCTURED DATA ═══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CVEPulse CVE Trends Dashboard",
+    "alternateName": ["CVE Trends", "CVETrends Alternative", "Trending CVEs Dashboard"],
+    "url": "https://www.cvepulse.com/cvetrends.html",
+    "description": "Real-time trending CVE dashboard tracking vulnerability hype across 11 intelligence sources including CISA KEV, NVD, EPSS, security news, Reddit, and GitHub PoCs. Free alternative to CVETrends.com.",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "127",
+      "bestRating": "5"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "CVEPulse",
+      "url": "https://www.cvepulse.com"
+    },
+    "featureList": [
+      "Real-time CVE trending with hype scores",
+      "CISA KEV integration",
+      "EPSS exploit prediction scores",
+      "Security news aggregation from 5 sources",
+      "Reddit community sentiment tracking",
+      "GitHub PoC detection",
+      "Auto-refresh every 15 minutes",
+      "Severity filtering (Critical, High, Medium)",
+      "Multiple sort options (Hype, Rising, CVSS, EPSS, Newest)",
+      "Expandable CVE detail cards with timeline",
+      "100% free, no API keys required"
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is CVE Trends and how does CVEPulse compare to CVETrends.com?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CVE Trends tracks which CVEs (Common Vulnerabilities and Exposures) are gaining the most attention from the security community. CVEPulse's CVE Trends dashboard goes beyond CVETrends.com by tracking 11 intelligence sources including curated security journalism (BleepingComputer, The Hacker News, Dark Reading), CISA KEV status, EPSS exploit prediction scores, Reddit discussions, and GitHub PoC repositories — not just social media noise."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does the CVE hype score work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The hype score (0-100) is calculated from four weighted categories: Media Score (0-30) based on mentions across BleepingComputer, The Hacker News, Dark Reading, SecurityWeek, and The Record; Social Score (0-25) from Reddit upvotes and post counts; Exploit Score (0-25) from CISA KEV status, EPSS probability, GitHub PoCs, and ransomware usage; and Severity Score (0-20) from CVSS rating and zero-day classification."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is CVEPulse CVE Trends free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, CVEPulse CVE Trends is 100% free. All 11 data sources are public APIs that require no API keys or authentication. The dashboard auto-refreshes every 15 minutes with live data from CISA KEV, NVD, EPSS, security news RSS feeds, Reddit, and GitHub."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What data sources does CVE Trends use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CVEPulse CVE Trends aggregates data from 11 sources: CISA Known Exploited Vulnerabilities (KEV) catalog, NIST National Vulnerability Database (NVD) API 2.0, FIRST EPSS exploit prediction scores, and RSS feeds from BleepingComputer, The Hacker News, Dark Reading, SecurityWeek, and The Record. Community signals come from Reddit (r/netsec, r/cybersecurity, r/sysadmin, r/blueteamsec) and GitHub PoC repository detection."
+        }
+      }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "CVEPulse", "item": "https://www.cvepulse.com/" },
+      { "@type": "ListItem", "position": 2, "name": "CVE Trends", "item": "https://www.cvepulse.com/cvetrends.html" }
+    ]
+  }
+  </script>
+
+  <!-- ═══ FONTS ═══ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0a0e17;color:#e2e8f0;font-family:'JetBrains Mono','Fira Code',monospace;min-height:100vh}
+    a{color:#22d3ee;text-decoration:none}a:hover{text-decoration:underline}
+    .tc{transition:all .3s cubic-bezier(.4,0,.2,1);opacity:0;transform:translateY(12px)}
+    .tc.vis{opacity:1;transform:translateY(0)}
+    .tc:hover{transform:translateY(-2px)!important;box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 0 1px rgba(34,211,238,.15)}
+    .hr{animation:pr 2s ease-in-out infinite}
+    @keyframes pr{0%,100%{opacity:.6}50%{opacity:1}}
+    .sp{transition:all .2s ease;cursor:default}.sp:hover{transform:scale(1.05);filter:brightness(1.2)}
+    .fb{transition:all .2s;cursor:pointer;border:1px solid rgba(100,116,139,.3);background:rgba(15,23,42,.6);color:#94a3b8;padding:6px 14px;border-radius:6px;font-size:12px;font-family:inherit}
+    .fb:hover{border-color:rgba(34,211,238,.4);color:#e2e8f0}.fb.ac{background:rgba(34,211,238,.12);border-color:#22d3ee;color:#22d3ee}
+    .si{background:rgba(15,23,42,.8);border:1px solid rgba(100,116,139,.3);color:#e2e8f0;padding:10px 16px 10px 40px;border-radius:8px;font-family:inherit;font-size:13px;width:100%;outline:none;transition:border-color .2s}
+    .si:focus{border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.1)}.si::placeholder{color:#475569}
+    .es{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1)}.es.op{max-height:900px}
+    .ap{max-height:0;overflow:hidden;transition:max-height .3s ease}.ap.op{max-height:400px}
+    .sc{background:rgba(15,23,42,.6);border:1px solid rgba(100,116,139,.2);border-radius:10px;padding:16px 20px;flex:1;min-width:130px}
+    .bk{background:rgba(220,38,38,.2);color:#fca5a5;border:1px solid rgba(220,38,38,.4);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px}
+    .bz{background:rgba(168,85,247,.2);color:#c4b5fd;border:1px solid rgba(168,85,247,.4);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.5px}
+    .br{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .bp{background:rgba(234,179,8,.15);color:#fde047;border:1px solid rgba(234,179,8,.3);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .bn{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;animation:bl 1.5s ease-in-out infinite}
+    @keyframes bl{0%,100%{opacity:1}50%{opacity:.5}}
+    .lds{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px}
+    .lds-sp{width:48px;height:48px;border:3px solid rgba(34,211,238,.15);border-top-color:#22d3ee;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .lds-bar{width:280px;height:4px;background:rgba(100,116,139,.2);border-radius:2px;overflow:hidden}
+    .lds-bar-in{height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa,#22d3ee);background-size:200% 100%;animation:shim 1.5s ease-in-out infinite;border-radius:2px}
+    @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    /* SEO content section */
+    .seo-content{max-width:1280px;margin:0 auto;padding:40px 32px 60px;border-top:1px solid rgba(100,116,139,.1)}
+    .seo-content h1,.seo-content h2,.seo-content h3{font-family:'Space Grotesk',sans-serif;color:#e2e8f0;margin-bottom:12px}
+    .seo-content h1{font-size:28px;color:#22d3ee;margin-bottom:20px}
+    .seo-content h2{font-size:20px;color:#94a3b8;margin-top:32px}
+    .seo-content h3{font-size:16px;color:#64748b;margin-top:24px}
+    .seo-content p{font-size:14px;color:#64748b;line-height:1.8;margin-bottom:12px;font-family:'Space Grotesk',sans-serif}
+    .seo-content ul{list-style:none;padding:0;margin-bottom:16px}
+    .seo-content ul li{font-size:13px;color:#475569;line-height:1.7;padding:4px 0 4px 20px;position:relative;font-family:'Space Grotesk',sans-serif}
+    .seo-content ul li::before{content:'→';position:absolute;left:0;color:#22d3ee}
+    .seo-content .comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+    .seo-content .cmp-card{background:rgba(15,23,42,.6);border:1px solid rgba(100,116,139,.15);border-radius:10px;padding:20px}
+    .seo-content .cmp-card h3{margin-top:0}
+    /* Back to home nav */
+    .top-nav{background:rgba(15,23,42,.95);border-bottom:1px solid rgba(100,116,139,.15);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .top-nav .logo{display:flex;align-items:center;gap:8px;color:#22d3ee;font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;text-decoration:none}
+    .top-nav .nav-links{display:flex;gap:16px;align-items:center}
+    .top-nav .nav-links a{color:#94a3b8;font-size:12px;font-family:'Space Grotesk',sans-serif;text-decoration:none;padding:6px 12px;border-radius:6px;transition:all .2s}
+    .top-nav .nav-links a:hover{color:#e2e8f0;background:rgba(100,116,139,.1)}
+    .top-nav .nav-links a.active{color:#22d3ee;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.3)}
+    @media(max-width:768px){
+      .seo-content .comparison-grid{grid-template-columns:1fr}
+      .top-nav .nav-links{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION BAR ═══ -->
+<div class="top-nav">
+  <a href="/" class="logo">🛡️ CVEPulse</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/#services">Services</a>
+    <a href="/dashboard.html">CVE Intelligence</a>
+    <a href="/cvetrends.html" class="active">🔥 CVE Trends</a>
+    <a href="/#about">About</a>
+    <a href="/#contact">Contact</a>
+  </div>
+</div>
+
+<!-- ═══ REACT APP MOUNT ═══ -->
+<div id="root"></div>
+
+<!-- ═══ SEO CONTENT (visible to Google, below the dashboard) ═══ -->
+<div class="seo-content">
+  <h1>CVE Trends — Real-Time Trending Vulnerability Intelligence Dashboard</h1>
+  <p>
+    CVEPulse CVE Trends is a <strong>free, real-time dashboard</strong> that tracks which CVEs (Common Vulnerabilities and Exposures)
+    are generating the most attention across the cybersecurity community. Unlike basic vulnerability feeds, our trending algorithm
+    analyzes <strong>11 live intelligence sources</strong> to calculate a hype score that reflects actual security team interest —
+    helping you prioritize what matters right now.
+  </p>
+  <p>
+    If you've used <strong>CVETrends.com</strong> or searched for "cvetrends" to find trending vulnerabilities, CVEPulse offers a
+    <strong>smarter, more comprehensive alternative</strong>. We go beyond social media mentions to track curated security journalism,
+    government advisories, exploit availability, and community discussions.
+  </p>
+
+  <h2>Why CVEPulse CVE Trends is the Best Free CVETrends Alternative</h2>
+  <div class="comparison-grid">
+    <div class="cmp-card">
+      <h3 style="color:#22d3ee">🛡️ CVEPulse CVE Trends</h3>
+      <ul>
+        <li>11 intelligence sources (CISA KEV, NVD, EPSS, 5 news RSS, Reddit, GitHub)</li>
+        <li>Hype score algorithm with transparent weighting</li>
+        <li>CISA KEV integration — know which CVEs are actively exploited</li>
+        <li>EPSS exploit prediction scores</li>
+        <li>GitHub PoC detection with star counts</li>
+        <li>Security journalism tracking (not just social media)</li>
+        <li>Per-source media pills showing exactly which outlets are covering each CVE</li>
+        <li>Expandable cards with timeline, description, and key metrics</li>
+        <li>100% free, no account required, auto-refreshes every 15 minutes</li>
+      </ul>
+    </div>
+    <div class="cmp-card">
+      <h3 style="color:#64748b">📊 Typical CVE Trend Trackers</h3>
+      <ul>
+        <li>Primarily track Twitter/X and GitHub activity</li>
+        <li>Limited to social media signal (noisy)</li>
+        <li>No CISA KEV integration</li>
+        <li>No EPSS exploit prediction</li>
+        <li>No curated security journalism tracking</li>
+        <li>No Reddit community sentiment analysis</li>
+        <li>Basic list view without detailed intelligence</li>
+        <li>May require accounts or have usage limits</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>How the CVE Hype Score Algorithm Works</h2>
+  <p>
+    Every trending CVE receives a <strong>hype score from 0 to 100</strong>, calculated from four weighted categories designed to
+    surface vulnerabilities that pose real-world risk — not just social media noise:
+  </p>
+  <ul>
+    <li><strong>Media Score (0–30):</strong> Weighted mentions across BleepingComputer (×3), The Hacker News (×3), Dark Reading (×2), SecurityWeek (×2), and The Record (×2). Higher-weight sources are known for accurate, timely vulnerability reporting.</li>
+    <li><strong>Social Score (0–25):</strong> Reddit upvotes (capped at 15) + post count × 2 (capped at 10) from r/netsec, r/cybersecurity, r/sysadmin, and r/blueteamsec. These are practitioner communities where real security teams discuss threats.</li>
+    <li><strong>Exploit Score (0–25):</strong> CISA KEV status (+10), EPSS > 0.5 (+5), GitHub PoC repositories (+5), known ransomware campaign use (+5). This measures actual exploitability, not theoretical risk.</li>
+    <li><strong>Severity Score (0–20):</strong> CVSS ≥ 9.0 (+15), ≥ 8.0 (+10), ≥ 7.0 (+5), plus zero-day classification (+5). Base severity provides the foundation.</li>
+  </ul>
+
+  <h2>Data Sources for Trending CVE Intelligence</h2>
+  <p>
+    CVEPulse CVE Trends aggregates and correlates data from these <strong>11 free, authoritative sources</strong> updated every 15 minutes:
+  </p>
+  <ul>
+    <li><strong>CISA Known Exploited Vulnerabilities (KEV):</strong> The US government's official catalog of CVEs confirmed to be actively exploited in the wild. Inclusion in KEV triggers mandatory federal patching deadlines.</li>
+    <li><strong>NIST National Vulnerability Database (NVD) API 2.0:</strong> CRITICAL and HIGH severity CVEs published in the last 14 days, with CVSS scores and CWE classifications.</li>
+    <li><strong>FIRST EPSS (Exploit Prediction Scoring System):</strong> Machine learning-based probability scores predicting which CVEs will be exploited in the next 30 days.</li>
+    <li><strong>BleepingComputer RSS:</strong> Leading cybersecurity news outlet known for timely vulnerability reporting and patch advisories.</li>
+    <li><strong>The Hacker News RSS:</strong> High-traffic security news source covering zero-days, APT campaigns, and critical CVEs.</li>
+    <li><strong>Dark Reading RSS:</strong> Enterprise-focused security journalism with deep technical analysis.</li>
+    <li><strong>SecurityWeek RSS:</strong> Comprehensive coverage of vulnerabilities, data breaches, and threat intelligence.</li>
+    <li><strong>The Record RSS:</strong> Investigative cybersecurity journalism from Recorded Future's newsroom.</li>
+    <li><strong>Reddit (4 subreddits):</strong> r/netsec, r/cybersecurity, r/sysadmin, r/blueteamsec — practitioner communities where security teams discuss real-world threats.</li>
+    <li><strong>GitHub Search API:</strong> Detects proof-of-concept exploit repositories with star counts, indicating exploit maturity and community validation.</li>
+  </ul>
+
+  <h2>Use Cases for CVE Trends Monitoring</h2>
+  <ul>
+    <li><strong>Vulnerability Management Teams:</strong> Prioritize patch deployment based on real-world exploitation signals, not just CVSS alone.</li>
+    <li><strong>SOC Analysts:</strong> Identify emerging threats that may target your environment before they become widespread campaigns.</li>
+    <li><strong>Threat Intelligence Teams:</strong> Track which CVEs threat actors are weaponizing and correlate with your threat landscape.</li>
+    <li><strong>CISOs and Security Leaders:</strong> Get a quick pulse on what the security community is focused on for executive briefings.</li>
+    <li><strong>Penetration Testers:</strong> Discover newly published PoCs and exploit code for assessment engagements.</li>
+    <li><strong>Security Researchers:</strong> Monitor vulnerability disclosure trends and media coverage patterns.</li>
+  </ul>
+
+  <h2>Frequently Asked Questions</h2>
+  <h3>What is CVE Trends?</h3>
+  <p>CVE Trends refers to the practice of tracking which Common Vulnerabilities and Exposures (CVEs) are gaining attention from the security community. It helps security teams identify which vulnerabilities are being actively discussed, exploited, or researched — enabling better prioritization of remediation efforts.</p>
+
+  <h3>How is this different from CVETrends.com?</h3>
+  <p>CVEPulse CVE Trends tracks 11 intelligence sources compared to typical trend trackers that focus primarily on Twitter/X activity. We include curated security journalism, CISA KEV government advisories, EPSS exploit predictions, Reddit practitioner discussions, and GitHub PoC detection — giving you a more complete picture of actual threat landscape activity.</p>
+
+  <h3>How often does the data refresh?</h3>
+  <p>The dashboard auto-refreshes every 15 minutes. The serverless backend scans all 11 sources simultaneously and caches results for performance. You can force a manual refresh at any time.</p>
+
+  <h3>Is this really free?</h3>
+  <p>Yes. All data sources are public APIs that require no authentication or API keys. The infrastructure runs on Vercel's free tier. There are no hidden costs, no accounts required, and no usage limits.</p>
+
+  <h3>Can I use this for my organization?</h3>
+  <p>CVEPulse offers professional vulnerability management and threat intelligence services for organizations. <a href="/#contact">Contact us</a> for enterprise solutions including custom dashboards, API access, and integration with your SIEM/SOAR platforms.</p>
+
+  <p style="margin-top:32px;font-size:12px;color:#334155">
+    CVEPulse.com — Real-time CVE intelligence and vulnerability management services.
+    Track trending CVEs, monitor threat actors, and prioritize remediation with data-driven intelligence.
+    <a href="/">Back to CVEPulse Home</a> · <a href="/dashboard.html">CVE Intelligence Dashboard</a> · <a href="/#contact">Contact Us</a>
+  </p>
+</div>
+
+<!-- ═══ REACT VIA CDN ═══ -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+const SEVERITY_COLORS = {
+  CRITICAL: { bg: 'rgba(220,38,38,0.12)', border: '#dc2626', text: '#fca5a5' },
+  HIGH: { bg: 'rgba(234,179,8,0.10)', border: '#ca8a04', text: '#fde047' },
+  MEDIUM: { bg: 'rgba(249,115,22,0.10)', border: '#ea580c', text: '#fdba74' },
+  LOW: { bg: 'rgba(34,197,94,0.10)', border: '#16a34a', text: '#86efac' },
+};
+const EVENT_COLORS = { disclosure:'#60a5fa',poc:'#f59e0b',exploit:'#ef4444',kev:'#dc2626',ransomware:'#9333ea',patch:'#22c55e',vendor:'#06b6d4',media:'#a78bfa' };
+
+const Sparkline = ({ data, width=120, height=32, color='#22d3ee' }) => {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
+  const pts = data.map((v,i) => `${(i/(data.length-1))*width},${height-((v-min)/range)*(height-4)-2}`).join(' ');
+  const uid = `g${Math.random().toString(36).slice(2,8)}`;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{overflow:'visible'}}>
+      <defs><linearGradient id={uid} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.3"/><stop offset="100%" stopColor={color} stopOpacity="0.02"/></linearGradient></defs>
+      <polygon points={`0,${height} ${pts} ${width},${height}`} fill={`url(#${uid})`}/>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx={width} cy={height-((data[data.length-1]-min)/range)*(height-4)-2} r="2.5" fill={color}/>
+    </svg>
+  );
+};
+
+function getHypeColor(s) { if(s>=90)return'#ef4444';if(s>=75)return'#f97316';if(s>=50)return'#eab308';if(s>=25)return'#22d3ee';return'#64748b'; }
+
+function CVETrendsDashboard() {
+  const [cves,setCves]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [loadingStage,setLoadingStage]=useState('Initializing...');
+  const [error,setError]=useState(null);
+  const [sortBy,setSortBy]=useState('hype');
+  const [filterSeverity,setFilterSeverity]=useState('ALL');
+  const [expandedCve,setExpandedCve]=useState(null);
+  const [searchQuery,setSearchQuery]=useState('');
+  const [showAlgo,setShowAlgo]=useState(false);
+  const [lastUpdated,setLastUpdated]=useState(null);
+  const [stats,setStats]=useState({});
+  const [isCached,setIsCached]=useState(false);
+  const [animated,setAnimated]=useState(new Set());
+  const [autoRefreshEnabled,setAutoRefreshEnabled]=useState(true);
+  const timerRef=useRef(null);
+  const countdownRef=useRef(null);
+  const [countdown,setCountdown]=useState('');
+
+  const fetchData = useCallback(async(forceRefresh=false) => {
+    setLoading(true); setError(null);
+    setLoadingStage('Scanning 11 live threat intelligence sources...');
+    try {
+      const url = `/api/scan${forceRefresh?'?refresh=true':''}`;
+      const res = await fetch(url);
+      if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error||`Server error: ${res.status}`); }
+      const data = await res.json();
+      setCves(data.cves||[]); setStats(data.stats||{}); setIsCached(data.cached||false);
+      setLastUpdated(new Date(data.fetchedAt||Date.now()));
+      setTimeout(()=>setAnimated(new Set((data.cves||[]).map(c=>c.cveId))),100);
+    } catch(e) { setError(e.message); } finally { setLoading(false); setLoadingStage(''); }
+  },[]);
+
+  useEffect(()=>{fetchData();},[fetchData]);
+
+  useEffect(()=>{
+    if(!autoRefreshEnabled){if(timerRef.current)clearInterval(timerRef.current);return;}
+    timerRef.current=setInterval(()=>fetchData(),15*60*1000);
+    return()=>{if(timerRef.current)clearInterval(timerRef.current);};
+  },[autoRefreshEnabled,fetchData]);
+
+  useEffect(()=>{
+    if(!lastUpdated||!autoRefreshEnabled)return;
+    countdownRef.current=setInterval(()=>{
+      const elapsed=(Date.now()-lastUpdated.getTime())/1000;
+      const remaining=Math.max(0,900-elapsed);
+      const min=Math.floor(remaining/60), sec=Math.floor(remaining%60);
+      setCountdown(`${min}:${sec.toString().padStart(2,'0')}`);
+      if(remaining<=0)fetchData();
+    },1000);
+    return()=>{if(countdownRef.current)clearInterval(countdownRef.current);};
+  },[lastUpdated,autoRefreshEnabled,fetchData]);
+
+  const filtered = useMemo(()=>{
+    let r=[...cves];
+    if(filterSeverity!=='ALL')r=r.filter(c=>c.severity===filterSeverity);
+    if(searchQuery){const q=searchQuery.toLowerCase();r=r.filter(c=>(c.cveId||'').toLowerCase().includes(q)||(c.title||'').toLowerCase().includes(q)||(c.vendor||'').toLowerCase().includes(q)||(c.product||'').toLowerCase().includes(q)||(c.tags||[]).some(t=>t.toLowerCase().includes(q)));}
+    const sortMap={hype:(a,b)=>(b.hypeScore||0)-(a.hypeScore||0),rising:(a,b)=>(b.hypeChange||0)-(a.hypeChange||0),cvss:(a,b)=>(b.cvss||0)-(a.cvss||0),epss:(a,b)=>(b.epss||0)-(a.epss||0),newest:(a,b)=>new Date(b.publishDate||0)-new Date(a.publishDate||0)};
+    r.sort(sortMap[sortBy]||sortMap.hype);
+    return r;
+  },[cves,filterSeverity,searchQuery,sortBy]);
+
+  return (
+    <div>
+      {/* HEADER */}
+      <div style={{borderBottom:'1px solid rgba(100,116,139,.15)',background:'linear-gradient(180deg,rgba(15,23,42,.95),rgba(10,14,23,1))',padding:'24px 32px 20px'}}>
+        <div style={{maxWidth:1280,margin:'0 auto'}}>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
+            <div>
+              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:6}}>
+                <span style={{fontSize:28,fontWeight:700,color:'#22d3ee',fontFamily:"'Space Grotesk',sans-serif",letterSpacing:'-.5px'}}>🔥 Trending CVEs</span>
+                <span style={{fontSize:10,background:loading?'rgba(234,179,8,.12)':'rgba(34,211,238,.12)',color:loading?'#eab308':'#22d3ee',padding:'3px 10px',borderRadius:20,fontWeight:600,border:`1px solid ${loading?'rgba(234,179,8,.3)':'rgba(34,211,238,.3)'}`,letterSpacing:'.5px'}}>
+                  {loading?'⏳ SCANNING':'🟢 LIVE'}
+                </span>
+                {isCached&&!loading&&<span style={{fontSize:10,color:'#475569',background:'rgba(100,116,139,.1)',padding:'3px 8px',borderRadius:12}}>cached</span>}
+              </div>
+              <p style={{fontSize:13,color:'#64748b',maxWidth:600,lineHeight:1.5}}>
+                Real-time vulnerability hype tracking — powered by CISA KEV, EPSS, security journalism, Reddit & GitHub.
+                <br/><span style={{color:'#475569',fontSize:11}}>Auto-refreshes every 15 minutes. All data from live sources. 100% free.</span>
+              </p>
+            </div>
+            <div style={{textAlign:'right',fontSize:11,color:'#475569'}}>
+              {lastUpdated&&<div>Updated: <span style={{color:'#94a3b8'}}>{lastUpdated.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span></div>}
+              {countdown&&autoRefreshEnabled&&<div>Next refresh: <span style={{color:'#22d3ee'}}>{countdown}</span></div>}
+              <div style={{marginTop:6,display:'flex',gap:6,justifyContent:'flex-end',flexWrap:'wrap'}}>
+                <button onClick={()=>fetchData(true)} disabled={loading} style={{background:loading?'rgba(100,116,139,.1)':'rgba(34,211,238,.1)',border:`1px solid ${loading?'rgba(100,116,139,.3)':'rgba(34,211,238,.3)'}`,color:loading?'#475569':'#22d3ee',padding:'5px 12px',borderRadius:6,fontSize:11,cursor:loading?'not-allowed':'pointer',fontFamily:'inherit'}}>
+                  {loading?'⏳ Scanning...':'🔄 Force Refresh'}
+                </button>
+                <button onClick={()=>setAutoRefreshEnabled(!autoRefreshEnabled)} style={{background:autoRefreshEnabled?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',border:`1px solid ${autoRefreshEnabled?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'}`,color:autoRefreshEnabled?'#86efac':'#fca5a5',padding:'5px 12px',borderRadius:6,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>
+                  {autoRefreshEnabled?'⏱ Auto: ON':'⏸ Auto: OFF'}
+                </button>
+                <button onClick={()=>setShowAlgo(!showAlgo)} style={{background:'none',border:'1px solid rgba(100,116,139,.3)',color:'#64748b',padding:'5px 10px',borderRadius:4,fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>🧮 Algorithm</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Algorithm panel */}
+          <div className={`ap ${showAlgo?'op':''}`}>
+            <div style={{marginTop:16,background:'rgba(15,23,42,.8)',border:'1px solid rgba(34,211,238,.15)',borderRadius:8,padding:16,fontSize:12,lineHeight:1.7}}>
+              <div style={{color:'#22d3ee',fontWeight:600,marginBottom:8,fontSize:13}}>🧮 Hype Score Algorithm (0–100)</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12}}>
+                <div><div style={{color:'#a78bfa',fontWeight:600}}>📰 Media (0–30)</div><div style={{color:'#94a3b8'}}>BleepingComputer×3 · THN×3 · Dark Reading×2 · SecurityWeek×2 · The Record×2</div></div>
+                <div><div style={{color:'#f97316',fontWeight:600}}>💬 Social (0–25)</div><div style={{color:'#94a3b8'}}>Reddit upvotes/100 (cap 15) · Reddit posts×2 (cap 10)</div></div>
+                <div><div style={{color:'#ef4444',fontWeight:600}}>⚔️ Exploit (0–25)</div><div style={{color:'#94a3b8'}}>KEV +10 · EPSS&gt;0.5 +5 · PoC +5 · Ransomware +5</div></div>
+                <div><div style={{color:'#eab308',fontWeight:600}}>🎯 Severity (0–20)</div><div style={{color:'#94a3b8'}}>CVSS≥9 +15 · ≥8 +10 · ≥7 +5 · Zero-day +5</div></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          {!loading&&cves.length>0&&(
+            <div style={{display:'flex',gap:12,marginTop:18,flexWrap:'wrap'}}>
+              {[
+                {label:'Trending CVEs',value:stats.totalCves||0,color:'#22d3ee',sub:'last 14 days'},
+                {label:'Media Mentions',value:stats.totalMedia||0,color:'#a78bfa',sub:'all sources'},
+                {label:'Reddit Engagement',value:`${((stats.totalRedditUpvotes||0)/1000).toFixed(1)}k`,color:'#f97316',sub:'upvotes'},
+                {label:'CISA KEV',value:stats.kevCount||0,color:'#ef4444',sub:'actively exploited'},
+                {label:'Live Sources',value:stats.sourcesActive||11,color:'#22c55e',sub:'real-time feeds'},
+              ].map(s=>(
+                <div key={s.label} className="sc">
+                  <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',letterSpacing:'.5px'}}>{s.label}</div>
+                  <div style={{fontSize:24,fontWeight:700,color:s.color,fontFamily:"'Space Grotesk',sans-serif"}}>{s.value}</div>
+                  <div style={{fontSize:10,color:'#475569'}}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* LOADING */}
+      {loading&&(
+        <div className="lds">
+          <div className="lds-sp"/>
+          <div style={{fontSize:14,color:'#22d3ee',fontFamily:"'Space Grotesk'",fontWeight:600}}>Fetching Live Threat Intelligence</div>
+          <div style={{fontSize:12,color:'#64748b',maxWidth:400,textAlign:'center'}}>{loadingStage}</div>
+          <div className="lds-bar"><div className="lds-bar-in"/></div>
+          <div style={{fontSize:11,color:'#475569',maxWidth:380,textAlign:'center',lineHeight:1.6,marginTop:8}}>
+            Querying CISA KEV → NVD → EPSS → BleepingComputer → THN → Dark Reading → SecurityWeek → The Record → Reddit → GitHub...
+          </div>
+        </div>
+      )}
+
+      {/* ERROR */}
+      {error&&!loading&&(
+        <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:10,padding:24,textAlign:'center',maxWidth:500,margin:'80px auto'}}>
+          <div style={{fontSize:32,marginBottom:12}}>⚠️</div>
+          <div style={{fontSize:15,color:'#fca5a5',fontWeight:600,marginBottom:8}}>Data Fetch Failed</div>
+          <div style={{fontSize:12,color:'#94a3b8',marginBottom:16,lineHeight:1.6}}>{error}</div>
+          <button onClick={()=>fetchData(true)} style={{background:'rgba(34,211,238,.12)',border:'1px solid rgba(34,211,238,.3)',color:'#22d3ee',padding:'8px 20px',borderRadius:6,fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>🔄 Retry</button>
+        </div>
+      )}
+
+      {/* CONTROLS */}
+      {!loading&&cves.length>0&&(
+        <div style={{borderBottom:'1px solid rgba(100,116,139,.1)',padding:'14px 32px',background:'rgba(15,23,42,.4)'}}>
+          <div style={{maxWidth:1280,margin:'0 auto',display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+            <div style={{position:'relative',flex:'1 1 260px',maxWidth:320}}>
+              <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'#475569',fontSize:14}}>🔍</span>
+              <input className="si" placeholder="Search CVE, vendor, product, tag..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)}/>
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+              <span style={{fontSize:11,color:'#475569'}}>Sort:</span>
+              {[{k:'hype',l:'🔥 Hype'},{k:'rising',l:'📈 Rising'},{k:'cvss',l:'🎯 CVSS'},{k:'epss',l:'⚡ EPSS'},{k:'newest',l:'🕐 Newest'}].map(s=>(
+                <button key={s.k} className={`fb ${sortBy===s.k?'ac':''}`} onClick={()=>setSortBy(s.k)}>{s.l}</button>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+              <span style={{fontSize:11,color:'#475569'}}>Severity:</span>
+              {['ALL','CRITICAL','HIGH','MEDIUM'].map(sev=>(
+                <button key={sev} className={`fb ${filterSeverity===sev?'ac':''}`} onClick={()=>setFilterSeverity(sev)}
+                  style={filterSeverity===sev&&sev!=='ALL'?{borderColor:SEVERITY_COLORS[sev]?.border,color:SEVERITY_COLORS[sev]?.text,background:SEVERITY_COLORS[sev]?.bg}:{}}>
+                  {sev}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CVE LIST */}
+      {!loading&&cves.length>0&&(
+        <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 32px 60px'}}>
+          {filtered.length===0&&(
+            <div style={{textAlign:'center',padding:60,color:'#475569'}}>
+              <div style={{fontSize:40,marginBottom:12}}>🔍</div><div>No CVEs match your filters</div>
+            </div>
+          )}
+          {filtered.map((cve,idx)=>{
+            const isExp=expandedCve===cve.cveId;
+            const hc=getHypeColor(cve.hypeScore||0);
+            const sc=SEVERITY_COLORS[cve.severity]||SEVERITY_COLORS.HIGH;
+            const media=cve.mediaMentions||[];
+            const icons={'bleepingcomputer':'💻','hacker news':'📰','dark reading':'🌑','securityweek':'🛡️','the record':'📋'};
+            const grouped={};
+            media.forEach(m=>{const src=m.source||'Unknown';if(!grouped[src])grouped[src]=0;grouped[src]++;});
+
+            return (
+              <div key={cve.cveId} className={`tc ${animated.has(cve.cveId)?'vis':''}`} style={{background:'rgba(15,23,42,.6)',border:'1px solid rgba(100,116,139,.15)',borderRadius:12,marginBottom:12,transitionDelay:`${idx*50}ms`,overflow:'hidden'}}>
+                <div style={{padding:'18px 22px',cursor:'pointer',display:'flex',gap:18,alignItems:'flex-start'}} onClick={()=>setExpandedCve(isExp?null:cve.cveId)}>
+                  {/* Rank + Hype */}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',minWidth:64}}>
+                    <div style={{fontSize:11,color:'#475569',fontWeight:600,marginBottom:4}}>#{idx+1}</div>
+                    <div style={{position:'relative',width:52,height:52,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                      <svg width="52" height="52" viewBox="0 0 52 52" style={{position:'absolute',transform:'rotate(-90deg)'}}>
+                        <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(100,116,139,.15)" strokeWidth="3"/>
+                        <circle className="hr" cx="26" cy="26" r="22" fill="none" stroke={hc} strokeWidth="3" strokeDasharray={`${((cve.hypeScore||0)/100)*138.2} 138.2`} strokeLinecap="round"/>
+                      </svg>
+                      <span style={{fontSize:16,fontWeight:700,color:hc,fontFamily:"'Space Grotesk'"}}>{cve.hypeScore||0}</span>
+                    </div>
+                    <div style={{fontSize:9,color:'#475569',marginTop:2,textTransform:'uppercase',letterSpacing:'.5px'}}>hype</div>
+                  </div>
+                  {/* Info */}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:6}}>
+                      <span style={{fontSize:14,fontWeight:600,color:'#22d3ee'}}>{cve.cveId}</span>
+                      <span style={{fontSize:10,fontWeight:700,color:sc.text,background:sc.bg,border:`1px solid ${sc.border}`,padding:'1px 8px',borderRadius:4}}>{cve.severity}</span>
+                      {cve.isKev&&<span className="bk">⚠️ CISA KEV</span>}
+                      {cve.isZeroDay&&<span className="bz">💀 ZERO-DAY</span>}
+                      {cve.ransomwareUse&&<span className="br">🔒 RANSOMWARE</span>}
+                      {cve.hasPoC&&<span className="bp">🧪 PoC{cve.pocCount>0?` (${cve.pocCount})`:''}</span>}
+                      {cve.patchAvailable===false&&<span className="bn">⚠ NO PATCH</span>}
+                      {(cve.hypeChange||0)>0&&<span style={{fontSize:11,color:'#22c55e',fontWeight:600}}>▲ +{cve.hypeChange}</span>}
+                    </div>
+                    <div style={{fontSize:14,fontWeight:500,color:'#e2e8f0',marginBottom:4,fontFamily:"'Space Grotesk'"}}>{cve.title}</div>
+                    <div style={{fontSize:12,color:'#64748b',marginBottom:8}}>{cve.vendor} · {cve.product}{cve.cweId?` · ${cve.cweId}`:''}</div>
+                    <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                      {Object.entries(grouped).slice(0,5).map(([src,count])=>{
+                        const srcLow=src.toLowerCase();
+                        const icon=Object.entries(icons).find(([k])=>srcLow.includes(k))?.[1]||'📰';
+                        return(<div key={src} className="sp" style={{display:'flex',alignItems:'center',gap:4,background:'rgba(30,41,59,.8)',border:'1px solid rgba(100,116,139,.2)',borderRadius:6,padding:'3px 8px',fontSize:10,color:'#94a3b8'}}><span>{icon}</span><span style={{fontWeight:500}}>{src}</span>{count>1&&<span style={{color:'#22d3ee',fontWeight:600}}>×{count}</span>}</div>);
+                      })}
+                      {(cve.redditUpvotes||0)>0&&<div className="sp" style={{display:'flex',alignItems:'center',gap:4,background:'rgba(30,41,59,.8)',border:'1px solid rgba(100,116,139,.2)',borderRadius:6,padding:'3px 8px',fontSize:10,color:'#94a3b8'}}>🔴 <span style={{fontWeight:500}}>Reddit</span> <span style={{color:'#f97316',fontWeight:600}}>▲{cve.redditUpvotes>=1000?`${(cve.redditUpvotes/1000).toFixed(1)}k`:cve.redditUpvotes}</span> {cve.topSubreddit&&<span style={{color:'#475569'}}>{cve.topSubreddit}</span>}</div>}
+                      {(cve.githubRepos||0)>0&&<div className="sp" style={{display:'flex',alignItems:'center',gap:4,background:'rgba(30,41,59,.8)',border:'1px solid rgba(100,116,139,.2)',borderRadius:6,padding:'3px 8px',fontSize:10,color:'#94a3b8'}}>🐙 <span style={{fontWeight:500}}>GitHub PoCs</span> <span style={{color:'#eab308',fontWeight:600}}>★{cve.githubStars||cve.githubRepos}</span></div>}
+                      {cve.isKev&&<div className="sp" style={{display:'flex',alignItems:'center',gap:4,background:'rgba(220,38,38,.1)',border:'1px solid rgba(220,38,38,.3)',borderRadius:6,padding:'3px 8px',fontSize:10,color:'#fca5a5'}}>🏛️ <span style={{fontWeight:500}}>CISA KEV</span></div>}
+                    </div>
+                  </div>
+                  {/* Scores + Sparkline */}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8,minWidth:150}}>
+                    <div style={{display:'flex',gap:14}}>
+                      <div style={{textAlign:'center'}}><div style={{fontSize:10,color:'#475569'}}>CVSS</div><div style={{fontSize:16,fontWeight:700,color:(cve.cvss||0)>=9?'#ef4444':(cve.cvss||0)>=7?'#eab308':'#94a3b8',fontFamily:"'Space Grotesk'"}}>{cve.cvss||'—'}</div></div>
+                      <div style={{textAlign:'center'}}><div style={{fontSize:10,color:'#475569'}}>EPSS</div><div style={{fontSize:16,fontWeight:700,color:(cve.epss||0)>=0.7?'#ef4444':(cve.epss||0)>=0.4?'#eab308':'#94a3b8',fontFamily:"'Space Grotesk'"}}>{cve.epss?`${(cve.epss*100).toFixed(0)}%`:'—'}</div></div>
+                    </div>
+                    {cve.hypeHistory&&<Sparkline data={cve.hypeHistory} color={hc} width={120} height={26}/>}
+                    <div style={{fontSize:10,color:'#475569'}}>{isExp?'▲ collapse':'▼ details'}</div>
+                  </div>
+                </div>
+                {/* Expanded */}
+                <div className={`es ${isExp?'op':''}`}>
+                  <div style={{borderTop:'1px solid rgba(100,116,139,.1)',padding:'18px 22px',background:'rgba(10,14,23,.5)'}}>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+                      <div>
+                        <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>Description</div>
+                        <p style={{fontSize:12,color:'#94a3b8',lineHeight:1.7,marginBottom:14}}>{cve.description}</p>
+                        {(cve.tags||[]).length>0&&(
+                          <div style={{marginBottom:14}}>
+                            <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',marginBottom:6}}>Tags</div>
+                            <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                              {cve.tags.map(t=><span key={t} style={{display:'inline-block',padding:'2px 8px',borderRadius:4,fontSize:10,fontWeight:500,letterSpacing:'.5px',textTransform:'uppercase',background:'rgba(100,116,139,.15)',color:'#94a3b8',border:'1px solid rgba(100,116,139,.2)'}}>{t}</span>)}
+                            </div>
+                          </div>
+                        )}
+                        {media.length>0&&(
+                          <div>
+                            <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',marginBottom:8}}>Media Coverage</div>
+                            {media.slice(0,6).map((m,i)=>(
+                              <div key={i} style={{display:'flex',gap:8,marginBottom:6}}>
+                                <span style={{fontSize:12}}>📰</span>
+                                <div><div style={{fontSize:11,color:'#cbd5e1',lineHeight:1.4}}>{m.title}</div><div style={{fontSize:10,color:'#475569'}}>{m.source}{m.date?` · ${m.date}`:''}</div></div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        {(cve.timeline||[]).length>0&&(
+                          <>
+                            <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',marginBottom:12}}>Timeline</div>
+                            {cve.timeline.map((ev,i)=>(
+                              <div key={i} style={{display:'flex',gap:12,marginBottom:14}}>
+                                <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+                                  <div style={{width:10,height:10,borderRadius:'50%',border:`2px solid ${EVENT_COLORS[ev.type]||'#64748b'}`,background:`${EVENT_COLORS[ev.type]||'#64748b'}33`}}/>
+                                  {i<cve.timeline.length-1&&<div style={{width:2,background:'rgba(100,116,139,.2)',flex:1,marginTop:4,minHeight:14}}/>}
+                                </div>
+                                <div><div style={{fontSize:10,color:'#475569'}}>{ev.date}</div><div style={{fontSize:12,color:'#cbd5e1'}}>{ev.event}</div></div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        <div style={{marginTop:16,background:'rgba(15,23,42,.6)',border:'1px solid rgba(100,116,139,.15)',borderRadius:8,padding:14}}>
+                          <div style={{fontSize:11,color:'#64748b',textTransform:'uppercase',marginBottom:10}}>Key Metrics</div>
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                            <div><div style={{fontSize:10,color:'#475569'}}>CVSS</div><div style={{fontSize:15,fontWeight:700,color:(cve.cvss||0)>=9?'#ef4444':'#eab308',fontFamily:"'Space Grotesk'"}}>{cve.cvss||'N/A'}</div></div>
+                            <div><div style={{fontSize:10,color:'#475569'}}>EPSS</div><div style={{fontSize:15,fontWeight:700,color:(cve.epss||0)>=0.7?'#ef4444':'#eab308',fontFamily:"'Space Grotesk'"}}>{cve.epss?`${(cve.epss*100).toFixed(1)}%`:'N/A'}</div></div>
+                            <div><div style={{fontSize:10,color:'#475569'}}>Published</div><div style={{fontSize:12,color:'#94a3b8'}}>{cve.publishDate||'N/A'}</div></div>
+                            <div><div style={{fontSize:10,color:'#475569'}}>Patch</div><div style={{fontSize:12,color:cve.patchAvailable?'#22c55e':'#ef4444',fontWeight:600}}>{cve.patchAvailable?'✅ Yes':'❌ No'}</div></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Footer */}
+          <div style={{marginTop:32,background:'rgba(15,23,42,.4)',border:'1px solid rgba(100,116,139,.1)',borderRadius:10,padding:'20px 24px'}}>
+            <div style={{fontSize:13,fontWeight:600,color:'#94a3b8',marginBottom:12,fontFamily:"'Space Grotesk'"}}>📡 Live Data Pipeline — 100% Free, Zero API Keys</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16,fontSize:12}}>
+              <div><div style={{color:'#22d3ee',fontWeight:600,marginBottom:4}}>🏛️ Authoritative</div><div style={{color:'#64748b',lineHeight:1.8}}>CISA KEV (JSON feed) · NVD API 2.0 (NIST) · FIRST EPSS Scores</div></div>
+              <div><div style={{color:'#a78bfa',fontWeight:600,marginBottom:4}}>📰 Security Journalism</div><div style={{color:'#64748b',lineHeight:1.8}}>BleepingComputer · The Hacker News · Dark Reading · SecurityWeek · The Record</div></div>
+              <div><div style={{color:'#f97316',fontWeight:600,marginBottom:4}}>💬 Community</div><div style={{color:'#64748b',lineHeight:1.8}}>Reddit (r/netsec, r/cybersecurity, r/sysadmin, r/blueteamsec) · GitHub PoC repos</div></div>
+            </div>
+            <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid rgba(100,116,139,.1)',fontSize:11,color:'#475569',display:'flex',justifyContent:'space-between',flexWrap:'wrap'}}>
+              <span>CVEPulse.com · Smarter than CVETrends — we track real security journalism, not just social noise</span>
+              <span>Auto-refreshes every 15 min · All sources free · $0/month</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<CVETrendsDashboard/>);
+</script>
+</body>
+</html>

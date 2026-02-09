@@ -3,14 +3,12 @@
 # Allow all bots to crawl everything
 User-agent: *
 Allow: /
+Sitemap: https://www.cvepulse.com/sitemap.xml
 
 # Disallow admin or private areas (if any in future)
 Disallow: /admin/
 Disallow: /api/
 Disallow: /private/
-
-# Sitemap location
-Sitemap: https://www.cvepulse.com/sitemap.xml
 
 # Crawl delay for specific bots (optional, adjust as needed)
 # User-agent: Googlebot
