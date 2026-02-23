@@ -21,7 +21,8 @@ const CVEPulseWebsite = () => {
   const navigation = [
     { name: 'Home', id: 'home' },
     { name: 'Services', id: 'services' },
-    { name: 'CVE Intelligence', id: 'cve-dashboard', href: '/dashboard.html' },
+    { name: 'CVE Intelligence', id: 'cve-dashboard', href: '/cve-intelligence.html' },
+    { name: 'KEV Dashboard', id: 'kev-dashboard', href: '/dashboard.html' },
 	{ name: '🔥 CVE Trends', id: 'cve-trends', href: '/cvetrends.html' },
     { name: 'Threat Intelligence', id: 'threat-dashboard', href: '/threat-dashboard.html' },
     { name: 'About', id: 'about' },
@@ -751,7 +752,7 @@ const CVEPulseWebsite = () => {
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-12 text-white">Live Intelligence Dashboards</h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-slate-800 rounded-lg p-8 border border-cyan-500/30 hover:border-cyan-500 transition-all cursor-pointer" onClick={() => setCurrentPage('cve-dashboard')}>
+            <a href="/cve-intelligence.html" className="bg-slate-800 rounded-lg p-8 border border-cyan-500/30 hover:border-cyan-500 transition-all cursor-pointer block">
               <AlertTriangle className="w-12 h-12 text-cyan-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">CVE Intelligence Dashboard</h3>
               <p className="text-slate-400 mb-4">
@@ -762,8 +763,8 @@ const CVEPulseWebsite = () => {
                 <span>Access Dashboard</span>
                 <ArrowRight className="w-5 h-5 ml-2" />
               </div>
-            </div>
-            <div className="bg-slate-800 rounded-lg p-8 border border-purple-500/30 hover:border-purple-500 transition-all cursor-pointer" onClick={() => setCurrentPage('threat-dashboard')}>
+            </a>
+            <a href="/threat-dashboard.html" className="bg-slate-800 rounded-lg p-8 border border-purple-500/30 hover:border-purple-500 transition-all cursor-pointer block">
               <Globe className="w-12 h-12 text-purple-400 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">Threat Intelligence Dashboard</h3>
               <p className="text-slate-400 mb-4">
@@ -774,7 +775,7 @@ const CVEPulseWebsite = () => {
                 <span>Access Dashboard</span>
                 <ArrowRight className="w-5 h-5 ml-2" />
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </section>

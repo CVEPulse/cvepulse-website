@@ -5,13 +5,9 @@
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/threat-intelligence", "destination": "/threat-intelligence.html" },
-    { "source": "/cve-intelligence", "destination": "/cve-intelligence.html" },
+    { "source": "/cve-intelligence", "destination": "/threat-intelligence.html" },
     { "source": "/vulnerability-management", "destination": "/vulnerability-management.html" },
     { "source": "/soc-monitoring", "destination": "/soc-monitoring.html" },
-    { "source": "/threat-modelling", "destination": "/threat-modelling.html" },
-    { "source": "/dashboard", "destination": "/dashboard.html" },
-    { "source": "/cvetrends", "destination": "/cvetrends.html" },
-    { "source": "/pricing", "destination": "/pricing.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/threat-modelling", "destination": "/threat-modelling.html" }
   ]
 }
