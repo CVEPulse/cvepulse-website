@@ -371,7 +371,7 @@ function CVETrendsDashboard() {
     try {
       // API hosted on separate Vercel project (cvepulse-trending)
       // Change this URL after deploying cvepulse-trending to Vercel
-      const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://cvepulse-trending.vercel.app';
+      const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://trending.cvepulse.com';
       const url = `${API_BASE}/api/scan${forceRefresh?'?refresh=true':''}`;
       const res = await fetch(url);
       if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error||`Server error: ${res.status}`); }
