@@ -94,7 +94,7 @@
         "name": "How does the CVE hype score work?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "The hype score (0-100) uses a social-signal-first algorithm inspired by CVETrends.com. Ranking is driven primarily by Media Coverage (0-40) from security journalism and Community Buzz (0-35) from Reddit and GitHub — together making up 75% of the score. Exploit Context (0-15) from CISA KEV and EPSS, plus Severity (0-10) from CVSS are supporting bonuses only. A CVSS 7.5 trending on Reddit will outrank a silent CVSS 9.8. CVEs with no social signal are capped at score 15."
+          "text": "The hype score (0-100) is calculated from four weighted categories: Media Score (0-30) based on mentions across BleepingComputer, The Hacker News, Dark Reading, SecurityWeek, and The Record; Social Score (0-25) from Reddit upvotes and post counts; Exploit Score (0-25) from CISA KEV status, EPSS probability, GitHub PoCs, and ransomware usage; and Severity Score (0-20) from CVSS rating and zero-day classification."
         }
       },
       {
@@ -257,10 +257,10 @@
     surface vulnerabilities that pose real-world risk — not just social media noise:
   </p>
   <ul>
-    <li><strong>Media Coverage Score (0–40):</strong> The primary ranking signal. Weighted mentions across BleepingComputer (×3), The Hacker News (×3), Dark Reading (×3), SecurityWeek (×2), The Record (×2), and CISA Advisories (×3). More coverage from trusted security journalists = higher score.</li>
-    <li><strong>Community Buzz Score (0–35):</strong> The second primary signal. Reddit upvotes from r/netsec, r/cybersecurity, r/sysadmin, and r/blueteamsec, plus post counts and GitHub PoC activity. This is where real practitioners discuss real threats.</li>
-    <li><strong>Exploit Context (0–15):</strong> A supporting bonus. CISA KEV status (+8), EPSS exploit probability (+2-4), and known ransomware campaign use (+3). Adds context but doesn't drive ranking alone.</li>
-    <li><strong>Severity Bonus (0–10):</strong> A minor boost only. CVSS ≥9.0 (+7), ≥8.0 (+4), ≥7.0 (+2), plus zero-day (+3). A CVSS 7.5 trending on Reddit will outrank a silent CVSS 9.8 — just like CVETrends.com.</li>
+    <li><strong>Media Score (0–30):</strong> Weighted mentions across BleepingComputer (×3), The Hacker News (×3), Dark Reading (×2), SecurityWeek (×2), and The Record (×2). Higher-weight sources are known for accurate, timely vulnerability reporting.</li>
+    <li><strong>Social Score (0–25):</strong> Reddit upvotes (capped at 15) + post count × 2 (capped at 10) from r/netsec, r/cybersecurity, r/sysadmin, and r/blueteamsec. These are practitioner communities where real security teams discuss threats.</li>
+    <li><strong>Exploit Score (0–25):</strong> CISA KEV status (+10), EPSS > 0.5 (+5), GitHub PoC repositories (+5), known ransomware campaign use (+5). This measures actual exploitability, not theoretical risk.</li>
+    <li><strong>Severity Score (0–20):</strong> CVSS ≥ 9.0 (+15), ≥ 8.0 (+10), ≥ 7.0 (+5), plus zero-day classification (+5). Base severity provides the foundation.</li>
   </ul>
 
   <h2>Data Sources for Trending CVE Intelligence</h2>
@@ -449,12 +449,12 @@ function CVETrendsDashboard() {
           {/* Algorithm panel */}
           <div className={`ap ${showAlgo?'op':''}`}>
             <div style={{marginTop:16,background:'rgba(15,23,42,.8)',border:'1px solid rgba(34,211,238,.15)',borderRadius:8,padding:16,fontSize:12,lineHeight:1.7}}>
-              <div style={{color:'#22d3ee',fontWeight:600,marginBottom:8,fontSize:13}}>🧮 Hype Score v5 — Social-Signal-First (0–100)</div>
+              <div style={{color:'#22d3ee',fontWeight:600,marginBottom:8,fontSize:13}}>🧮 Hype Score Algorithm (0–100)</div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12}}>
-                <div><div style={{color:'#a78bfa',fontWeight:600}}>📰 Media Coverage (0–40) PRIMARY</div><div style={{color:'#94a3b8'}}>BleepingComputer×3 · THN×3 · DarkReading×3 · SecurityWeek×2 · TheRecord×2 · CISA×3</div></div>
-                <div><div style={{color:'#f97316',fontWeight:600}}>💬 Community Buzz (0–35) PRIMARY</div><div style={{color:'#94a3b8'}}>Reddit upvotes/30 (cap 18) · Posts×3 (cap 12) · GitHub PoCs (1+=3, 3+=5)</div></div>
-                <div><div style={{color:'#ef4444',fontWeight:600}}>⚔️ Exploit Context (0–15) BONUS</div><div style={{color:'#94a3b8'}}>KEV +8 · EPSS≥0.7 +4 · ≥0.3 +2 · Ransomware +3</div></div>
-                <div><div style={{color:'#eab308',fontWeight:600}}>🎯 Severity (0–10) MINOR</div><div style={{color:'#94a3b8'}}>CVSS≥9 +7 · ≥8 +4 · ≥7 +2 · Zero-day +3 · No-signal cap: 15</div></div>
+                <div><div style={{color:'#a78bfa',fontWeight:600}}>📰 Media (0–30)</div><div style={{color:'#94a3b8'}}>BleepingComputer×3 · THN×3 · Dark Reading×2 · SecurityWeek×2 · The Record×2</div></div>
+                <div><div style={{color:'#f97316',fontWeight:600}}>💬 Social (0–25)</div><div style={{color:'#94a3b8'}}>Reddit upvotes/100 (cap 15) · Reddit posts×2 (cap 10)</div></div>
+                <div><div style={{color:'#ef4444',fontWeight:600}}>⚔️ Exploit (0–25)</div><div style={{color:'#94a3b8'}}>KEV +10 · EPSS&gt;0.5 +5 · PoC +5 · Ransomware +5</div></div>
+                <div><div style={{color:'#eab308',fontWeight:600}}>🎯 Severity (0–20)</div><div style={{color:'#94a3b8'}}>CVSS≥9 +15 · ≥8 +10 · ≥7 +5 · Zero-day +5</div></div>
               </div>
             </div>
           </div>
