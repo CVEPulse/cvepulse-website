@@ -325,7 +325,6 @@ const SEVERITY_COLORS = {
   CRITICAL: { bg: 'rgba(220,38,38,0.12)', border: '#dc2626', text: '#fca5a5' },
   HIGH: { bg: 'rgba(234,179,8,0.10)', border: '#ca8a04', text: '#fde047' },
   MEDIUM: { bg: 'rgba(249,115,22,0.10)', border: '#ea580c', text: '#fdba74' },
-  'N/A': { bg: 'rgba(100,116,139,0.10)', border: '#64748b', text: '#94a3b8' },
   LOW: { bg: 'rgba(34,197,94,0.10)', border: '#16a34a', text: '#86efac' },
 };
 const EVENT_COLORS = { disclosure:'#60a5fa',poc:'#f59e0b',exploit:'#ef4444',kev:'#dc2626',ransomware:'#9333ea',patch:'#22c55e',vendor:'#06b6d4',media:'#a78bfa' };
@@ -372,7 +371,7 @@ function CVETrendsDashboard() {
     try {
       // API hosted on separate Vercel project (cvepulse-trending)
       // Change this URL after deploying cvepulse-trending to Vercel
-      const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://trending.cvepulse.com';
+      const API_BASE = window.location.hostname === 'localhost' ? '' : 'https://cvepulse-trending.vercel.app';
       const url = `${API_BASE}/api/scan${forceRefresh?'?refresh=true':''}`;
       const res = await fetch(url);
       if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error||`Server error: ${res.status}`); }
