@@ -22,12 +22,13 @@ const CVEPulseWebsite = () => {
     { name: 'Home', id: 'home' },
     { name: 'Services', id: 'services' },
     { name: 'CVE Intelligence', id: 'cve-dashboard', href: '/cve-intelligence.html' },
-    { name: '🔥 CVE Trends', id: 'cve-trends', href: '/cvetrends.html' },
     { name: 'KEV Dashboard', id: 'kev-dashboard', href: '/dashboard.html' },
+	{ name: '🔥 CVE Trends', id: 'cve-trends', href: '/cvetrends.html' },
     { name: 'Threat Intelligence', id: 'threat-dashboard', href: '/threat-dashboard.html' },
     { name: 'About', id: 'about' },
     { name: 'Contact', id: 'contact' },
-    { name: 'Pricing', id: 'pricing', href: '/pricing.html' },
+    { name: 'Privacy', id: 'privacy' },
+    { name: 'Terms', id: 'terms' }
   ];
 
   const services = [
@@ -671,22 +672,15 @@ const CVEPulseWebsite = () => {
             Real-Time CVE Intelligence | Emergency & Zero-Day Detection
           </p>
           <p className="text-xl text-center mb-10 text-slate-300 max-w-3xl mx-auto">
-            Free live dashboards for vulnerability intelligence, community-driven CVE trending, and active exploit tracking — plus professional security services for teams that need more.
+            Comprehensive vulnerability management, threat intelligence, and SOC services powered by real-time intelligence
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a 
-              href="/cve-intelligence.html"
+              href="/dashboard.html"
               className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
             >
               <TrendingUp className="w-5 h-5" />
-              <span>CVE Intelligence</span>
-            </a>
-            <a 
-              href="/cvetrends.html"
-              className="px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all transform hover:scale-105"
-            >
-              <Activity className="w-5 h-5" />
-              <span>🔥 CVE Trends</span>
+              <span>View Live CVE Dashboard</span>
             </a>
             <a 
               href="/pricing.html"
@@ -695,6 +689,13 @@ const CVEPulseWebsite = () => {
               <DollarSign className="w-5 h-5" />
               <span>View Pricing</span>
             </a>
+            <button 
+              onClick={() => setCurrentPage('contact')}
+              className="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold flex items-center space-x-2 transition-all"
+            >
+              <Mail className="w-5 h-5" />
+              <span>Contact Sales</span>
+            </button>
           </div>
         </div>
       </section>
@@ -749,131 +750,32 @@ const CVEPulseWebsite = () => {
 
       <section className="bg-gradient-to-br from-slate-800 to-slate-900 py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-3 text-white">Free Intelligence Dashboards</h2>
-          <p className="text-center text-slate-400 mb-4 max-w-2xl mx-auto text-lg">
-            Three live dashboards. Three different questions answered. All free, no login required.
-          </p>
-          <p className="text-center text-cyan-400 mb-12 max-w-xl mx-auto font-semibold italic">
-            "Intelligence tells you what to fix. Trends tells you what to watch. KEV tells you what's under attack."
-          </p>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {/* CVE Intelligence */}
-            <a href="/cve-intelligence.html" className="bg-slate-800 rounded-lg p-8 border border-cyan-500/30 hover:border-cyan-500 transition-all group block">
-              <div className="flex items-center gap-3 mb-3">
-                <AlertTriangle className="w-10 h-10 text-cyan-400" />
-                <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-3 py-1 rounded-full uppercase tracking-wider">Risk Analysis</span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">CVE Intelligence</h3>
-              <p className="text-cyan-400 font-semibold text-sm mb-3">Know what to fix.</p>
-              <p className="text-slate-400 text-sm mb-4">
-                Every Critical and High severity CVE from the last 14 days, scored by real-world exploitability — CVSS, EPSS probability, CISA KEV status, and GitHub PoC availability. Built for teams who need to prioritize patches, not just see alerts.
+          <h2 className="text-4xl font-bold text-center mb-12 text-white">Live Intelligence Dashboards</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <a href="/cve-intelligence.html" className="bg-slate-800 rounded-lg p-8 border border-cyan-500/30 hover:border-cyan-500 transition-all cursor-pointer block">
+              <AlertTriangle className="w-12 h-12 text-cyan-400 mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-3">CVE Intelligence Dashboard</h3>
+              <p className="text-slate-400 mb-4">
+                Real-time tracking of trending CVEs from BleepingComputer, The Hacker News, Reddit & CISA. 
+                Auto-refreshes every 15 minutes with emergency and zero-day detection.
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">NVD API</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">EPSS Scores</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">CISA KEV</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">GitHub PoCs</span>
-              </div>
-              <div className="flex items-center text-cyan-400 font-semibold group-hover:translate-x-1 transition-transform">
-                <span>Open Dashboard</span>
+              <div className="flex items-center text-cyan-400 font-semibold">
+                <span>Access Dashboard</span>
                 <ArrowRight className="w-5 h-5 ml-2" />
               </div>
             </a>
-
-            {/* CVE Trends */}
-            <a href="/cvetrends.html" className="bg-slate-800 rounded-lg p-8 border border-orange-500/30 hover:border-orange-500 transition-all group block">
-              <div className="flex items-center gap-3 mb-3">
-                <TrendingUp className="w-10 h-10 text-orange-400" />
-                <span className="text-xs font-bold text-orange-400 bg-orange-400/10 px-3 py-1 rounded-full uppercase tracking-wider">Community Signal</span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">🔥 CVE Trends</h3>
-              <p className="text-orange-400 font-semibold text-sm mb-3">Know what to watch.</p>
-              <p className="text-slate-400 text-sm mb-4">
-                Which CVEs are making headlines? Track what BleepingComputer, The Hacker News, Reddit, and GitHub are buzzing about. Hype scores surface the vulnerabilities generating real community attention. The free alternative to CVETrends.com.
+            <a href="/threat-dashboard.html" className="bg-slate-800 rounded-lg p-8 border border-purple-500/30 hover:border-purple-500 transition-all cursor-pointer block">
+              <Globe className="w-12 h-12 text-purple-400 mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-3">Threat Intelligence Dashboard</h3>
+              <p className="text-slate-400 mb-4">
+                Sector-specific threat feeds, dark web monitoring, IoC repository, and live threat actor tracking 
+                across Finance, Healthcare, Manufacturing, and more.
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">Security News RSS</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">Reddit</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">GitHub PoCs</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">CISA KEV</span>
-              </div>
-              <div className="flex items-center text-orange-400 font-semibold group-hover:translate-x-1 transition-transform">
-                <span>Open Dashboard</span>
+              <div className="flex items-center text-purple-400 font-semibold">
+                <span>Access Dashboard</span>
                 <ArrowRight className="w-5 h-5 ml-2" />
               </div>
             </a>
-
-            {/* KEV Dashboard */}
-            <a href="/dashboard.html" className="bg-slate-800 rounded-lg p-8 border border-red-500/30 hover:border-red-500 transition-all group block">
-              <div className="flex items-center gap-3 mb-3">
-                <Shield className="w-10 h-10 text-red-400" />
-                <span className="text-xs font-bold text-red-400 bg-red-400/10 px-3 py-1 rounded-full uppercase tracking-wider">Active Exploits</span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">KEV Dashboard</h3>
-              <p className="text-red-400 font-semibold text-sm mb-3">Know what's under attack.</p>
-              <p className="text-slate-400 text-sm mb-4">
-                CISA's Known Exploited Vulnerabilities catalog — every CVE confirmed exploited in the wild with federal patching deadlines, ransomware flags, EPSS probability scores, and overdue SLA tracking. The definitive list of what attackers are using right now.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">CISA KEV</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">EPSS Scores</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">SLA Tracking</span>
-                <span className="text-xs px-2 py-1 rounded bg-slate-700 text-slate-300">Ransomware Flags</span>
-              </div>
-              <div className="flex items-center text-red-400 font-semibold group-hover:translate-x-1 transition-transform">
-                <span>Open Dashboard</span>
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </div>
-            </a>
-          </div>
-
-          {/* When a CVE appears on all three */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl border border-slate-600 p-8 mb-8">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">When a CVE Scores High on All Three — Drop Everything.</h3>
-              <p className="text-slate-400 max-w-2xl mx-auto">
-                A CVSS 9.8 with zero media coverage? Intelligence catches it. A CVSS 7.5 mass-exploited bug trending on Reddit? Trends catches it. A confirmed actively-exploited vulnerability with a federal deadline? KEV catches it. Together, they give you the complete picture.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6 text-center">
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <div className="text-3xl mb-2">🔬</div>
-                <div className="text-cyan-400 font-bold text-sm">Intelligence Only</div>
-                <div className="text-slate-500 text-xs mt-1">Silent but dangerous — patch proactively</div>
-              </div>
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <div className="text-3xl mb-2">📢</div>
-                <div className="text-orange-400 font-bold text-sm">Trending Only</div>
-                <div className="text-slate-500 text-xs mt-1">Community buzz — monitor closely</div>
-              </div>
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <div className="text-3xl mb-2">🚨</div>
-                <div className="text-red-400 font-bold text-sm">All Three</div>
-                <div className="text-slate-500 text-xs mt-1">Critical threat — immediate action required</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Services upsell */}
-          <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-xl border border-cyan-500/20 p-8 text-center">
-            <h3 className="text-xl font-bold text-white mb-3">Need More Than Dashboards?</h3>
-            <p className="text-slate-400 mb-6 max-w-2xl mx-auto">
-              Our free dashboards give you visibility. Our professional services give you action. From vulnerability management consulting to custom enterprise dashboards with API access, SLA integration, and executive reporting — we help security teams move from alerts to outcomes.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a href="/pricing.html" className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold inline-flex items-center space-x-2 transition-all">
-                <DollarSign className="w-4 h-4" />
-                <span>View Plans & Pricing</span>
-              </a>
-              <button onClick={() => setCurrentPage('services')} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold inline-flex items-center space-x-2 transition-all">
-                <Eye className="w-4 h-4" />
-                <span>Explore Services</span>
-              </button>
-              <button onClick={() => setCurrentPage('contact')} className="px-6 py-3 border border-cyan-500/30 hover:border-cyan-500 text-cyan-400 rounded-lg font-semibold inline-flex items-center space-x-2 transition-all">
-                <Mail className="w-4 h-4" />
-                <span>Talk to Us</span>
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -916,25 +818,17 @@ const CVEPulseWebsite = () => {
       <section className="bg-gradient-to-r from-cyan-600 to-blue-600 py-16">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Dashboards Are Just the Beginning
+            Ready to Transform Your Security Posture?
           </h2>
           <p className="text-xl text-cyan-50 mb-8">
-            Our free dashboards give you visibility. Our professional services give you results. Let's talk about what your team needs.
+            Schedule a consultation to discuss how CVEPulse can protect your organization
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
           <a 
             href="/pricing.html"
             className="px-8 py-4 bg-white text-cyan-600 rounded-lg font-bold text-lg hover:bg-slate-100 transition-all transform hover:scale-105"
           >
-            View Pricing & Plans
+            View Pricing & Services
           </a>
-          <button
-            onClick={() => setCurrentPage('contact')}
-            className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-bold text-lg hover:bg-white/10 transition-all"
-          >
-            Schedule a Consultation
-          </button>
-          </div>
         </div>
       </section>
     </div>
