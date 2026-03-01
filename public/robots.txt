@@ -4,18 +4,20 @@
 User-agent: *
 Allow: /
 
-# Dashboards (crawl frequently)
+# Dashboards
 Allow: /cve-intelligence.html
 Allow: /cvetrends.html
 Allow: /dashboard.html
 Allow: /threat-dashboard.html
 
 # Service pages
-Allow: /pricing.html
 Allow: /vulnerability-management.html
+Allow: /exposure-management.html
+Allow: /zero-day-response.html
 Allow: /threat-intelligence.html
 Allow: /threat-modelling.html
 Allow: /soc-monitoring.html
+Allow: /pricing.html
 
 # Info pages
 Allow: /about.html
@@ -23,11 +25,9 @@ Allow: /contact.html
 Allow: /privacy.html
 Allow: /terms.html
 
-# Block admin & old files
+# Block admin
 Disallow: /admin.html
 Disallow: /oldthreat-dashboard.html
 Disallow: /OLDdashboard.html
-Disallow: /js/
 
-# Sitemap
 Sitemap: https://www.cvepulse.com/sitemap.xml
