@@ -11,7 +11,6 @@ const CVEPulseWebsite = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDashboardDropdown, setShowDashboardDropdown] = useState(false);
-  const [showServicesDropdown, setShowServicesDropdown] = useState(false);
   
   // Phase 3 State
   const [showAlerts, setShowAlerts] = useState(false);
@@ -32,15 +31,6 @@ const CVEPulseWebsite = () => {
     { name: '🔥 CVE Trends', href: '/cvetrends.html', tagline: 'Know what to watch', color: 'text-orange-400', icon: '📈' },
     { name: 'KEV Dashboard', href: '/dashboard.html', tagline: "Know what's under attack", color: 'text-red-400', icon: '🛡️' },
     { name: 'Threat Intelligence', href: '/threat-dashboard.html', tagline: 'Know who is attacking', color: 'text-purple-400', icon: '🌐' },
-  ];
-
-  const serviceLinks = [
-    { name: 'Vulnerability Management', tagline: 'VM program assessment & patch governance', icon: '🛡️' },
-    { name: 'Exposure Management', tagline: 'Attack surface analysis & CTEM strategy', icon: '🔍' },
-    { name: 'Zero-Day Response', tagline: 'Emergency triage & remediation guidance', icon: '⚡' },
-    { name: 'Threat Intelligence', tagline: 'Dark web monitoring & IoC feeds', icon: '🌐' },
-    { name: 'Application Threat Modeling', tagline: 'STRIDE analysis, SIEM rules & API security', icon: '🎯' },
-    { name: 'SOC Monitoring', tagline: '24/7 MDR, detection engineering & IR', icon: '📡' },
   ];
 
   const services = [
@@ -1746,36 +1736,15 @@ const CVEPulseWebsite = () => {
               )}
             </div>
 
-            {/* Services Dropdown */}
-            <div className="relative" onMouseEnter={() => setShowServicesDropdown(true)} onMouseLeave={() => setShowServicesDropdown(false)}>
-              <button className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors flex items-center space-x-1">
-                <span>Services</span>
-                <svg className={`w-4 h-4 transition-transform ${showServicesDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              {showServicesDropdown && (
-                <div className="absolute top-full left-0 mt-1 w-72 bg-slate-800 border border-slate-600 rounded-lg shadow-xl shadow-black/20 py-2 z-50">
-                  {serviceLinks.map((s, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setCurrentPage('services'); setShowServicesDropdown(false); }}
-                      className="flex items-start px-4 py-3 hover:bg-slate-700/50 transition-colors group w-full text-left"
-                    >
-                      <span className="text-lg mr-3 mt-0.5">{s.icon}</span>
-                      <div>
-                        <div className="text-sm font-semibold text-cyan-400 group-hover:brightness-110">{s.name}</div>
-                        <div className="text-xs text-slate-400">{s.tagline}</div>
-                      </div>
-                    </button>
-                  ))}
-                  <div className="border-t border-slate-600 mt-2 pt-2">
-                    <a href="/pricing.html" className="flex items-center px-4 py-2 hover:bg-slate-700/50 transition-colors text-sm text-slate-300">
-                      <span className="text-lg mr-3">💼</span>
-                      <span>Pricing & Plans</span>
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Services */}
+            <button
+              onClick={() => setCurrentPage('services')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentPage === 'services' ? 'bg-cyan-600 text-white' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+              }`}
+            >
+              Services
+            </button>
 
             {/* About */}
             <button
@@ -1848,18 +1817,8 @@ const CVEPulseWebsite = () => {
 
             <div className="border-t border-slate-700 mt-2 pt-2">
               <button onClick={() => { setCurrentPage('platform'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">Platform</button>
-              
-              <div className="px-4 py-2 mt-1">
-                <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Services</span>
-              </div>
-              {serviceLinks.map((s, i) => (
-                <button key={i} onClick={() => { setCurrentPage('services'); setMobileMenuOpen(false); }} className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 w-full text-left">
-                  <span className="mr-2">{s.icon}</span>
-                  <span>{s.name}</span>
-                </button>
-              ))}
-
-              <button onClick={() => { setCurrentPage('about'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 mt-1 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">About</button>
+              <button onClick={() => { setCurrentPage('services'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">Services</button>
+              <button onClick={() => { setCurrentPage('about'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">About</button>
               <button onClick={() => { setCurrentPage('insights'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">Insights</button>
               <button onClick={() => { setCurrentPage('contact'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">Contact</button>
               <a href="/pricing.html" className="block px-4 py-2 mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-md text-sm font-semibold text-center">Pricing</a>
@@ -1900,10 +1859,8 @@ const CVEPulseWebsite = () => {
             <h3 className="text-white font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-slate-400 text-sm">
               <li><a href="/vulnerability-management.html" className="hover:text-cyan-400">Vulnerability Management</a></li>
-              <li><a href="/exposure-management.html" className="hover:text-cyan-400">Exposure Management</a></li>
-              <li><a href="/zero-day-response.html" className="hover:text-cyan-400">Zero-Day Response</a></li>
               <li><a href="/threat-intelligence.html" className="hover:text-cyan-400">Threat Intelligence</a></li>
-              <li><a href="/threat-modelling.html" className="hover:text-cyan-400">Application Threat Modeling</a></li>
+              <li><a href="/threat-modelling.html" className="hover:text-cyan-400">Threat Modeling</a></li>
               <li><a href="/soc-monitoring.html" className="hover:text-cyan-400">SOC Monitoring</a></li>
               <li><a href="/pricing.html" className="hover:text-cyan-400">Pricing & Plans</a></li>
             </ul>
