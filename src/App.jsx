@@ -35,12 +35,12 @@ const CVEPulseWebsite = () => {
   ];
 
   const serviceLinks = [
-    { name: 'Vulnerability Management', tagline: 'VM program assessment & patch governance', icon: '🛡️' },
-    { name: 'Exposure Management', tagline: 'Attack surface analysis & CTEM strategy', icon: '🔍' },
-    { name: 'Zero-Day Response', tagline: 'Emergency triage & remediation guidance', icon: '⚡' },
-    { name: 'Threat Intelligence', tagline: 'Dark web monitoring & IoC feeds', icon: '🌐' },
-    { name: 'Application Threat Modeling', tagline: 'STRIDE analysis, SIEM rules & API security', icon: '🎯' },
-    { name: 'SOC Monitoring', tagline: '24/7 MDR, detection engineering & IR', icon: '📡' },
+    { name: 'Vulnerability Management', tagline: 'VM program assessment & patch governance', icon: '🛡️', href: '/vulnerability-management.html' },
+    { name: 'Exposure Management', tagline: 'Attack surface analysis & CTEM strategy', icon: '🔍', href: '/exposure-management.html' },
+    { name: 'Zero-Day Response', tagline: 'Emergency triage & remediation guidance', icon: '⚡', href: '/zero-day-response.html' },
+    { name: 'Threat Intelligence', tagline: 'Dark web monitoring & IoC feeds', icon: '🌐', href: '/threat-intelligence.html' },
+    { name: 'Application Threat Modeling', tagline: 'STRIDE analysis, SIEM rules & API security', icon: '🎯', href: '/threat-modelling.html' },
+    { name: 'SOC Monitoring', tagline: '24/7 MDR, detection engineering & IR', icon: '📡', href: '/soc-monitoring.html' },
   ];
 
   const services = [
@@ -1755,17 +1755,17 @@ const CVEPulseWebsite = () => {
               {showServicesDropdown && (
                 <div className="absolute top-full left-0 mt-1 w-72 bg-slate-800 border border-slate-600 rounded-lg shadow-xl shadow-black/20 py-2 z-50">
                   {serviceLinks.map((s, i) => (
-                    <button
+                    <a
                       key={i}
-                      onClick={() => { setCurrentPage('services'); setShowServicesDropdown(false); }}
-                      className="flex items-start px-4 py-3 hover:bg-slate-700/50 transition-colors group w-full text-left"
+                      href={s.href}
+                      className="flex items-start px-4 py-3 hover:bg-slate-700/50 transition-colors group w-full text-left no-underline"
                     >
                       <span className="text-lg mr-3 mt-0.5">{s.icon}</span>
                       <div>
                         <div className="text-sm font-semibold text-cyan-400 group-hover:brightness-110">{s.name}</div>
                         <div className="text-xs text-slate-400">{s.tagline}</div>
                       </div>
-                    </button>
+                    </a>
                   ))}
                   <div className="border-t border-slate-600 mt-2 pt-2">
                     <a href="/pricing.html" className="flex items-center px-4 py-2 hover:bg-slate-700/50 transition-colors text-sm text-slate-300">
@@ -1853,10 +1853,10 @@ const CVEPulseWebsite = () => {
                 <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Services</span>
               </div>
               {serviceLinks.map((s, i) => (
-                <button key={i} onClick={() => { setCurrentPage('services'); setMobileMenuOpen(false); }} className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 w-full text-left">
+                <a key={i} href={s.href} className="flex items-center px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 w-full text-left no-underline">
                   <span className="mr-2">{s.icon}</span>
                   <span>{s.name}</span>
-                </button>
+                </a>
               ))}
 
               <button onClick={() => { setCurrentPage('about'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-2 mt-1 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700">About</button>
