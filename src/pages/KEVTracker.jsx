@@ -62,14 +62,6 @@ export default function KEVTracker() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
-      <style>{`
-        body { background: radial-gradient(ellipse 1200px 600px at 50% -20%, rgba(34,211,238,0.12), transparent 60%), linear-gradient(180deg, #0B1226 0%, #0F172A 100%); background-attachment: fixed; }
-        .grad-text { background: linear-gradient(135deg,#67E8F9,#06B6D4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .card-grad { background: linear-gradient(180deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.6) 100%); }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .pulse-dot { animation: pulse 2s infinite; }
-      `}</style>
-
       <div className="max-w-7xl mx-auto px-8 pt-12 pb-12">
         <Link to="/" className="font-mono text-xs text-slate-500 hover:text-cyan-400 transition">
           ← cvepulse.com

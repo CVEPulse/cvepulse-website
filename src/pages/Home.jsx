@@ -1,20 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchKEV, fetchRecentCVEs } from '../lib/cveFetcher';
 
 export default function Home() {
+  const [liveCounts, setLiveCounts] = useState({
+    kevTotal: null,
+    recentCount: null,
+    todayCount: null,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    Promise.allSettled([fetchKEV(), fetchRecentCVEs(50)])
+      .then(([kevRes, recentRes]) => {
+        if (!alive) return;
+        const kevTotal = kevRes.status === 'fulfilled' ? kevRes.value.count : null;
+        const recent = recentRes.status === 'fulfilled' ? recentRes.value : [];
+        const recentCount = recent.length || null;
+        // Count CVEs published in last 24h
+        const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        const todayCount = recent.filter(c => new Date(c.published).getTime() > dayAgo).length || null;
+        setLiveCounts({ kevTotal, recentCount, todayCount });
+      });
+    return () => { alive = false; };
+  }, []);
+
+  // Format with thousands separator, fall back to placeholder
+  const fmt = (n) => n === null ? '—' : n.toLocaleString();
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
-      <style>{`
-        :root {
-          --cyan-300:#67E8F9; --cyan-400:#22D3EE; --cyan-500:#06B6D4; --cyan-600:#0891B2;
-        }
-        body { background: radial-gradient(ellipse 1200px 600px at 50% -20%, rgba(34,211,238,0.12), transparent 60%), linear-gradient(180deg, #0B1226 0%, #0F172A 100%); background-attachment: fixed; }
-        .grad-text { background: linear-gradient(135deg,#67E8F9,#06B6D4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .card-grad { background: linear-gradient(180deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.6) 100%); }
-        .pulse-dot { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      `}</style>
-
       {/* ANNOUNCE */}
       <div className="border-b border-slate-700/30 py-2.5 text-center text-sm text-slate-300"
            style={{ background: 'linear-gradient(90deg,rgba(34,211,238,0.06),rgba(34,211,238,0.12),rgba(34,211,238,0.06))' }}>
@@ -93,15 +108,27 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-8 grid md:grid-cols-3 gap-5 mb-24">
         <DashCard to="/cve-intelligence" icon="CVE INTEL" title="CVE Intelligence"
                   question='"What new CVEs matter most to me today?"'
-                  numbers={[{ v: '2,847', l: 'Tracked' }, { v: '47', l: 'Today', cyan: true }, { v: '11', l: 'Sources' }]}
+                  numbers={[
+                    { v: fmt(liveCounts.recentCount), l: 'Tracked (7d)' },
+                    { v: fmt(liveCounts.todayCount), l: 'New today', cyan: true },
+                    { v: '3', l: 'Sources' },
+                  ]}
                   enhancement="+ Mythos Risk Score on every CVE" />
         <DashCard to="/cvetrends" icon="CVE TRENDS" title="CVE Trends"
                   question='"Which trending CVEs would Mythos prioritise?"'
-                  numbers={[{ v: '12', l: 'Trending', cyan: true }, { v: 'v5', l: 'Hype Score' }, { v: '5m', l: 'Refresh' }]}
+                  numbers={[
+                    { v: 'MWS', l: 'Hype × AI', cyan: true },
+                    { v: '6 sig', l: 'Composite' },
+                    { v: '5m', l: 'Refresh' },
+                  ]}
                   enhancement="+ AI-affinity overlay on hype score" />
         <DashCard to="/kev" icon="KEV NOW" title="KEV Tracker"
                   question='"Which KEV CVEs are AI-weaponizable today?"'
-                  numbers={[{ v: '1,194', l: 'Listed' }, { v: '3', l: 'This Week', cyan: true }, { v: 'CISA', l: 'Source' }]}
+                  numbers={[
+                    { v: fmt(liveCounts.kevTotal), l: 'Listed' },
+                    { v: 'Hourly', l: 'Sync', cyan: true },
+                    { v: 'CISA', l: 'Upstream' },
+                  ]}
                   enhancement="+ Mythos likelihood per CVE" />
       </div>
 
@@ -165,7 +192,7 @@ export default function Home() {
         <WhyCard num="01" title="Practitioner-built" body="Designed by VM and ASM directors managing six-figure backlogs in regulated environments — pharma, finance, healthcare." />
         <WhyCard num="02" title="Intelligence-first" body="KEV, EPSS, NVD, public PoC, exposure context — combined into composite scores that mean something. Not just CVSS repeated." />
         <WhyCard num="03" title="Mythos-ready" body="The first platform with dedicated tooling for AI-era exploit velocity. The Readiness Index and Mythos Lens are the thesis." />
-        <WhyCard num="04" title="Mid-market priced" body="XM Cyber and Tenable One are out of reach for most teams. CVEPulse brings exposure defence to the rest of us." />
+        <WhyCard num="04" title="Mid-market priced" body="Enterprise CTEM platforms are designed for organisations with seven-figure security budgets. CVEPulse brings exposure defence to the rest of us." />
       </div>
 
       {/* CTA */}
@@ -208,9 +235,9 @@ function ProductMockup() {
           <span className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]"></span>
           <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]"></span>
           <span className="ml-3 px-2.5 py-0.5 bg-slate-900/70 border border-slate-700/30 rounded font-mono text-[0.7rem] text-slate-400">
-            <span className="text-green-400">●</span> cvepulse.com/mythos-lens
+            <span className="text-amber-400">●</span> cvepulse.com/mythos-lens · illustrative preview
           </span>
-          <span className="ml-auto font-mono text-[0.65rem] text-cyan-400 uppercase tracking-wider">Live Demo</span>
+          <span className="ml-auto font-mono text-[0.65rem] text-amber-400 uppercase tracking-wider">Preview</span>
         </div>
 
         <div className="p-5">
@@ -223,20 +250,20 @@ function ProductMockup() {
             ))}
           </div>
 
-          {/* KPI Stats */}
+          {/* KPI Stats — illustrative preview */}
           <div className="grid grid-cols-4 gap-3 mb-5">
             {[
-              { label: 'Total CVEs', val: '58,526', delta: '↑ 412 this week', up: true },
-              { label: 'MWS ≥ 85', val: '147', delta: '↑ 12 critical', up: true, highlight: true },
-              { label: 'KEV Listed', val: '89', delta: '↑ 3 today', up: true },
-              { label: 'Avg SLA', val: '14d', delta: '↓ 6d MoM', up: false },
+              { label: 'Total CVEs', val: '—', delta: 'your backlog', up: true },
+              { label: 'MWS ≥ 85', val: '—', delta: 'Mythos targets', up: true, highlight: true },
+              { label: 'KEV Listed', val: '—', delta: 'CISA confirmed', up: true },
+              { label: 'Avg SLA', val: '—', delta: 'patch window', up: false },
             ].map((s, i) => (
               <div key={i} className={`p-3.5 rounded-lg border ${s.highlight
                 ? 'bg-cyan-400/5 border-cyan-400/30'
                 : 'bg-slate-900/50 border-slate-700/30'}`}>
                 <div className="font-mono text-[0.62rem] text-slate-500 uppercase tracking-wider mb-1.5">{s.label}</div>
                 <div className={`text-2xl font-bold leading-none ${s.highlight ? 'text-cyan-400' : 'text-white'}`}>{s.val}</div>
-                <div className={`font-mono text-[0.65rem] mt-1.5 ${s.up ? 'text-red-400' : 'text-green-400'}`}>{s.delta}</div>
+                <div className="font-mono text-[0.65rem] mt-1.5 text-slate-500">{s.delta}</div>
               </div>
             ))}
           </div>
@@ -247,11 +274,11 @@ function ProductMockup() {
               <div>CVE ID</div><div>Vulnerability</div><div>EPSS</div><div>KEV</div><div>MWS</div>
             </div>
             {[
-              { cve: 'CVE-2026-0411', desc: 'Linux kernel qdisc UAF — RCE', epss: '0.97', kev: 'YES', mws: '94', mwsTone: 'red', featured: true },
-              { cve: 'CVE-2026-1182', desc: 'Apache HTTP Server auth bypass', epss: '0.91', kev: 'YES', mws: '91', mwsTone: 'red' },
-              { cve: 'CVE-2026-0827', desc: 'Microsoft Exchange RCE chain', epss: '0.88', kev: 'YES', mws: '87', mwsTone: 'orange' },
-              { cve: 'CVE-2026-2104', desc: 'VMware vCenter directory traversal', epss: '0.74', kev: '—', mws: '81', mwsTone: 'orange' },
-              { cve: 'CVE-2026-1955', desc: 'Citrix ADC SSL VPN buffer overflow', epss: '0.69', kev: '—', mws: '76', mwsTone: 'amber' },
+              { cve: 'CVE-2024-3400', desc: 'Palo Alto PAN-OS GlobalProtect — RCE', epss: '0.94', kev: 'YES', mws: '96', mwsTone: 'red', featured: true },
+              { cve: 'CVE-2024-21887', desc: 'Ivanti Connect Secure command injection', epss: '0.97', kev: 'YES', mws: '94', mwsTone: 'red' },
+              { cve: 'CVE-2024-1709', desc: 'ConnectWise ScreenConnect auth bypass', epss: '0.93', kev: 'YES', mws: '92', mwsTone: 'red' },
+              { cve: 'CVE-2023-46805', desc: 'Ivanti Connect Secure auth bypass', epss: '0.92', kev: 'YES', mws: '90', mwsTone: 'red' },
+              { cve: 'CVE-2024-27198', desc: 'JetBrains TeamCity auth bypass', epss: '0.86', kev: 'YES', mws: '87', mwsTone: 'orange' },
             ].map((r, i) => (
               <div key={i}
                    className={`grid grid-cols-[80px_1fr_70px_80px_60px] gap-2 px-3.5 py-2.5 border-b border-slate-700/30 last:border-b-0 items-center text-[0.74rem] ${

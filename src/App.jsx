@@ -1,24 +1,37 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { Header, Footer } from './components/Layout';
+import './styles/global.css';
 
-// Lazy load pages for performance - only loads what visitor needs
+// Lazy load all pages for performance
 const Home = lazy(() => import('./pages/Home'));
 const MythosDefense = lazy(() => import('./pages/MythosDefense'));
+const MythosReadiness = lazy(() => import('./pages/MythosReadiness'));
+const MythosLens = lazy(() => import('./pages/MythosLens'));
+
+// Free dashboards
 const CVEIntelligence = lazy(() => import('./pages/CVEIntelligence'));
 const CVETrends = lazy(() => import('./pages/CVETrends'));
 const KEVTracker = lazy(() => import('./pages/KEVTracker'));
 
-// Stub pages - replace with your existing components
-const Stub = ({ title }) => (
-  <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center px-8">
-    <div className="text-center max-w-2xl">
-      <h1 className="text-4xl font-bold mb-4 text-white">{title}</h1>
-      <p className="text-slate-400 mb-6">This page exists in your current site — keep your existing component or wire it up here.</p>
-      <a href="/" className="text-cyan-400 hover:text-cyan-300 font-semibold">← Back to home</a>
+// Marketing pages
+const Pricing = lazy(() => import('./pages/Pricing'));
+const Services = lazy(() => import('./pages/Services'));
+const About = lazy(() => import('./pages/About'));
+const Insights = lazy(() => import('./pages/Insights'));
+
+function NotFound() {
+  return (
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center px-8">
+      <div className="text-center max-w-2xl">
+        <div className="font-mono text-xs text-cyan-400 uppercase tracking-wider mb-3">// 404</div>
+        <h1 className="text-5xl font-bold mb-4 text-white tracking-tight">Page not found.</h1>
+        <p className="text-slate-400 mb-6">The page you're looking for doesn't exist — or it's been moved.</p>
+        <Link to="/" className="text-cyan-400 hover:text-cyan-300 font-semibold">← Back to home</Link>
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 function LoadingScreen() {
   return (
@@ -38,23 +51,32 @@ export default function App() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<Home />} />
+
+          {/* Mythos Defense suite */}
           <Route path="/mythos-defense" element={<MythosDefense />} />
+          <Route path="/mythos-readiness" element={<MythosReadiness />} />
+          <Route path="/mythos-lens" element={<MythosLens />} />
 
           {/* Free dashboards - Mythos enhanced */}
           <Route path="/cve-intelligence" element={<CVEIntelligence />} />
           <Route path="/intelligence" element={<CVEIntelligence />} />
           <Route path="/cvetrends" element={<CVETrends />} />
+          <Route path="/cve-trends" element={<CVETrends />} />
           <Route path="/kev" element={<KEVTracker />} />
+          <Route path="/kev-tracker" element={<KEVTracker />} />
 
-          {/* Existing pages - swap stubs for your real components */}
-          <Route path="/services" element={<Stub title="Services" />} />
-          <Route path="/insights" element={<Stub title="Insights" />} />
-          <Route path="/pricing" element={<Stub title="Pricing" />} />
-          <Route path="/about" element={<Stub title="About" />} />
-          <Route path="/mythos-readiness" element={<Stub title="Mythos Readiness Index" />} />
-          <Route path="/mythos-lens" element={<Stub title="Mythos Lens" />} />
+          {/* Marketing & company */}
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/insights" element={<Insights />} />
 
-          <Route path="*" element={<Stub title="404 — Page not found" />} />
+          {/* Legal placeholders */}
+          <Route path="/terms" element={<NotFound />} />
+          <Route path="/privacy" element={<NotFound />} />
+          <Route path="/security" element={<NotFound />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <Footer />

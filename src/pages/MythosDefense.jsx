@@ -4,14 +4,6 @@ import { Link } from 'react-router-dom';
 export default function MythosDefense() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
-      <style>{`
-        body { background: radial-gradient(ellipse 1200px 600px at 50% -20%, rgba(34,211,238,0.12), transparent 60%), linear-gradient(180deg, #0B1226 0%, #0F172A 100%); background-attachment: fixed; }
-        .grad-text { background: linear-gradient(135deg,#67E8F9,#06B6D4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .card-grad { background: linear-gradient(180deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.6) 100%); }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .pulse-dot { animation: pulse 1.5s infinite; }
-      `}</style>
-
       <div className="max-w-7xl mx-auto px-8 pt-6 pb-12">
         <div className="font-mono text-xs text-slate-500 uppercase tracking-wider mb-6">
           <Link to="/" className="hover:text-cyan-400 transition">Home</Link>
@@ -193,10 +185,10 @@ function ScoreCard() {
   return (
     <div className="card-grad border border-cyan-400/30 rounded-2xl p-8 sticky top-6"
          style={{ boxShadow: '0 0 60px rgba(34,211,238,0.1)' }}>
-      <div className="font-mono text-xs text-cyan-400 uppercase tracking-wider mb-2 font-semibold">// Worked example</div>
-      <div className="text-base font-semibold text-slate-200 mb-1">CVE-2026-0411</div>
-      <div className="text-sm text-slate-400 mb-6">Linux kernel qdisc UAF — RCE</div>
-      <div className="text-7xl font-extrabold text-red-400 leading-none tracking-tight mb-2">94</div>
+      <div className="font-mono text-xs text-cyan-400 uppercase tracking-wider mb-2 font-semibold">// Worked example · Real CVE</div>
+      <div className="text-base font-semibold text-slate-200 mb-1">CVE-2024-3400</div>
+      <div className="text-sm text-slate-400 mb-6">Palo Alto PAN-OS GlobalProtect — RCE</div>
+      <div className="text-7xl font-extrabold text-red-400 leading-none tracking-tight mb-2">96</div>
       <div className="font-mono text-xs text-slate-500 uppercase tracking-wider mb-6">out of 100 · MWS</div>
       <div className="py-4 border-y border-slate-700/30">
         <div className="font-mono text-xs text-slate-500 uppercase tracking-wider mb-1 font-semibold">// Verdict</div>
@@ -205,7 +197,7 @@ function ScoreCard() {
       <div className="flex flex-wrap gap-1.5 mt-5">
         <Tag tone="red">RCE</Tag>
         <Tag tone="red">KEV listed</Tag>
-        <Tag tone="amber">EPSS 0.97</Tag>
+        <Tag tone="amber">EPSS 0.94</Tag>
         <Tag tone="amber">PoC public</Tag>
         <Tag tone="cyan">Internet-facing</Tag>
       </div>

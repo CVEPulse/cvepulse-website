@@ -14,7 +14,7 @@ export function Header() {
         </Link>
         <div className="hidden md:flex items-center gap-1 flex-1 ml-4">
           <NavLink to="/intelligence" active={isActive('/intelligence') || pathname.startsWith('/cve-intelligence') || pathname.startsWith('/cvetrends') || pathname.startsWith('/kev')}>Intelligence</NavLink>
-          <NavLink to="/mythos-defense" active={isActive('/mythos-defense')} badge="NEW">Mythos Defense</NavLink>
+          <NavLink to="/mythos-defense" active={pathname.startsWith('/mythos')} badge="NEW">Mythos Defense</NavLink>
           <NavLink to="/services" active={isActive('/services')}>Services</NavLink>
           <NavLink to="/insights" active={isActive('/insights')}>Insights</NavLink>
           <NavLink to="/pricing" active={isActive('/pricing')}>Pricing</NavLink>
