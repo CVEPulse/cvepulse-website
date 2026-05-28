@@ -1,23 +1,27 @@
 /**
- * CVE Data Fetcher with stale-while-revalidate caching
+ * CVE Data Fetcher — calls CVEPulse's own serverless functions
  *
- * Solves the "dashboards are super slow" problem:
- *  - In-memory + sessionStorage cache
- *  - Stale-while-revalidate: shows cached data instantly, refreshes in background
- *  - Batched requests (single fetch instead of N+1 per CVE)
- *  - Concurrent fetches with Promise.all
- *  - Falls back gracefully if any source fails
+ * Architecture:
+ *   Browser → /api/intelligence → Server-side fetch to CISA + NVD + EPSS → Browser
+ *
+ * Why this matters:
+ *   - No CORS issues (we control the response headers)
+ *   - No rate limiting (we cache server-side for 15-30 min)
+ *   - Faster (one round-trip from browser, parallel server-side)
+ *   - More reliable (we can fall back gracefully)
+ *
+ * Caching layers:
+ *   1. Browser memory (per-tab, instant)
+ *   2. sessionStorage (per-tab, survives reload)
+ *   3. Vercel Edge CDN (15-30 min server-side cache)
  */
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes client-side
 const cache = new Map();
 
 function getCached(key) {
-  // Memory first
   const mem = cache.get(key);
   if (mem && Date.now() - mem.ts < CACHE_TTL_MS) return mem.data;
-
-  // Then sessionStorage
   try {
     const raw = sessionStorage.getItem(`cvepulse:${key}`);
     if (raw) {
@@ -27,7 +31,7 @@ function getCached(key) {
         return parsed.data;
       }
     }
-  } catch (_) { /* ignore */ }
+  } catch (_) {}
   return null;
 }
 
@@ -36,132 +40,63 @@ function setCached(key, data) {
   cache.set(key, entry);
   try {
     sessionStorage.setItem(`cvepulse:${key}`, JSON.stringify(entry));
-  } catch (_) { /* quota exceeded - ignore */ }
+  } catch (_) {}
 }
 
-/**
- * Stale-while-revalidate fetch - returns cached immediately if available,
- * triggers background refresh, and calls onUpdate when new data arrives.
- */
-export async function swrFetch(key, fetcher, onUpdate) {
+async function fetchWithCache(key, url) {
   const cached = getCached(key);
-  if (cached) {
-    // Background refresh
-    fetcher()
-      .then(fresh => {
-        setCached(key, fresh);
-        if (onUpdate) onUpdate(fresh);
-      })
-      .catch(() => { /* keep stale */ });
-    return cached;
-  }
-  const fresh = await fetcher();
-  setCached(key, fresh);
-  return fresh;
+  if (cached) return cached;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} returned ${res.status}`);
+  const data = await res.json();
+  setCached(key, data);
+  return data;
 }
 
 /**
- * NVD - Recent CVEs (last 7 days, top 50)
- * https://services.nvd.nist.gov/rest/json/cves/2.0
+ * The main endpoint — returns everything the dashboards need in one call.
+ * Server-side: fetches CISA KEV, batches EPSS, scores with MWS, sorts.
  */
-export async function fetchRecentCVEs(limit = 50) {
-  const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const url = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${startDate}&resultsPerPage=${limit}`;
-
-  return swrFetch(`nvd:recent:${limit}`, async () => {
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-    if (!res.ok) throw new Error(`NVD ${res.status}`);
-    const data = await res.json();
-    return (data.vulnerabilities || []).map(v => normalizeNvdCve(v.cve));
-  });
-}
-
-function normalizeNvdCve(c) {
-  const cvssV3 = c.metrics?.cvssMetricV31?.[0]?.cvssData
-    || c.metrics?.cvssMetricV30?.[0]?.cvssData
-    || null;
-  return {
-    id: c.id,
-    description: c.descriptions?.find(d => d.lang === 'en')?.value || '',
-    published: c.published,
-    cvss: cvssV3?.baseScore || 0,
-    severity: cvssV3?.baseSeverity || 'UNKNOWN',
-    cwe: c.weaknesses?.[0]?.description?.[0]?.value || '',
-    references: (c.references || []).slice(0, 5).map(r => r.url),
-    hasPoc: detectPoc(c.references || []),
-  };
-}
-
-function detectPoc(refs) {
-  return refs.some(r => {
-    const url = (r.url || '').toLowerCase();
-    return url.includes('github.com') ||
-           url.includes('exploit-db.com') ||
-           url.includes('packetstormsecurity') ||
-           (r.tags || []).includes('Exploit');
-  });
+export async function fetchIntelligence() {
+  return fetchWithCache('intelligence', '/api/intelligence');
 }
 
 /**
- * CISA KEV catalog - the authoritative "actively exploited" list
+ * Direct CISA KEV catalog (full list, normalized).
+ * Used by KEV Tracker dashboard.
  */
 export async function fetchKEV() {
-  const url = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
-  return swrFetch('cisa:kev', async () => {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`KEV ${res.status}`);
-    const data = await res.json();
-    return {
-      count: data.count,
-      catalogVersion: data.catalogVersion,
-      dateReleased: data.dateReleased,
-      vulnerabilities: data.vulnerabilities.map(v => ({
-        id: v.cveID,
-        vendor: v.vendorProject,
-        product: v.product,
-        name: v.vulnerabilityName,
-        dateAdded: v.dateAdded,
-        description: v.shortDescription,
-        action: v.requiredAction,
-        dueDate: v.dueDate,
-        ransomwareUse: v.knownRansomwareCampaignUse === 'Known',
-      })),
-    };
-  });
+  return fetchWithCache('kev', '/api/kev');
 }
 
 /**
- * EPSS scores - probability of exploitation
- * Bulk fetch instead of per-CVE
+ * Recent CVEs from NVD (last 7 days by default).
+ * Used by CVE Intelligence + CVE Trends dashboards.
+ */
+export async function fetchRecentCVEs(limit = 50, days = 7) {
+  const key = `cves:${limit}:${days}`;
+  const result = await fetchWithCache(key, `/api/cves?limit=${limit}&days=${days}`);
+  return result.cves || [];
+}
+
+/**
+ * EPSS scores for a batch of CVE IDs.
+ * Returns: { "CVE-2024-1": { epss, percentile }, ... }
  */
 export async function fetchEPSSBatch(cveIds) {
   if (!cveIds || cveIds.length === 0) return {};
-  const ids = cveIds.slice(0, 100).join(','); // EPSS API limit
-  const url = `https://api.first.org/data/v1/epss?cve=${ids}`;
-
-  return swrFetch(`epss:${ids.slice(0, 50)}`, async () => {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`EPSS ${res.status}`);
-    const data = await res.json();
-    const map = {};
-    (data.data || []).forEach(d => {
-      map[d.cve] = { epss: parseFloat(d.epss), percentile: parseFloat(d.percentile) };
-    });
-    return map;
-  });
+  const ids = cveIds.slice(0, 100).join(',');
+  const key = `epss:${ids.slice(0, 80)}`;
+  const result = await fetchWithCache(key, `/api/epss?cves=${ids}`);
+  return result.scores || {};
 }
 
 /**
- * Single combined fetch for dashboards - batched + cached + parallel
- *
- * Returns enriched CVE list ready for MWS scoring.
+ * Combined fetch for CVE Intelligence + Trends dashboards.
+ * Returns CVEs enriched with KEV and EPSS data, ready for MWS scoring client-side.
  */
 export async function fetchEnrichedCVEs(limit = 50) {
-  const [recent, kev] = await Promise.all([
-    fetchRecentCVEs(limit),
-    fetchKEV(),
-  ]);
-
+  const [recent, kev] = await Promise.all([fetchRecentCVEs(limit), fetchKEV()]);
   const kevSet = new Set(kev.vulnerabilities.map(v => v.id));
   const ids = recent.map(c => c.id);
   const epssMap = await fetchEPSSBatch(ids);
@@ -171,12 +106,13 @@ export async function fetchEnrichedCVEs(limit = 50) {
     isKev: kevSet.has(c.id),
     epss: epssMap[c.id]?.epss || 0,
     epssPercentile: epssMap[c.id]?.percentile || 0,
-    isInternetFacing: true, // Default to true for unknown environment
+    isInternetFacing: true,
   }));
 }
 
 /**
- * KEV-specific enrichment for KEV Tracker dashboard
+ * KEV-specific enrichment for KEV Tracker dashboard.
+ * Pulls full KEV catalog + EPSS scores for top entries.
  */
 export async function fetchEnrichedKEV() {
   const kev = await fetchKEV();
@@ -190,8 +126,8 @@ export async function fetchEnrichedKEV() {
       epss: epssMap[v.id]?.epss || 0,
       epssPercentile: epssMap[v.id]?.percentile || 0,
       isKev: true,
-      hasPoc: true, // KEV-listed CVEs almost always have public exploits
-      cvss: 8, // Default high - KEV implies critical-ish
+      hasPoc: true,
+      cvss: 8.5,
       isInternetFacing: true,
     })),
   };

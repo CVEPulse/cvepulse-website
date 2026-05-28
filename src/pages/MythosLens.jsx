@@ -1,15 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { calculateMWS, inferAttackClass } from '../lib/mythosScoring';
-import { fetchEnrichedKEV } from '../lib/cveFetcher';
+import { fetchIntelligence } from '../lib/cveFetcher';
 
 /**
  * Mythos Lens — CSV upload + MWS scoring engine
  *
- * Free demo: LIVE CISA KEV catalog (real, current data)
+ * Free demo: LIVE CISA KEV catalog scored server-side (real, current data)
  * Paid: real CSV upload from Qualys / Tenable / Rapid7
  *
- * Browser-only execution — no data leaves the device.
+ * Browser-only execution for uploads — no data leaves the device.
  */
 
 export default function MythosLens() {
@@ -28,36 +27,17 @@ export default function MythosLens() {
     setLoadingDemo(true);
     setDemoError(null);
     try {
-      // Pull real, current CISA KEV data and score the most recent 30 entries
-      const kev = await fetchEnrichedKEV();
-      const recent = kev.vulnerabilities
-        .slice()
-        .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
-        .slice(0, 30);
-
-      const enriched = recent.map(v => {
-        const attackClass = inferAttackClass({ description: v.description });
-        return {
-          id: v.id,
-          description: v.description || v.name,
-          cvss: v.cvss || 8,
-          epss: v.epss || 0,
-          isKev: true,
-          hasPoc: true,
-          isInternetFacing: true,
-          asset: `${v.vendor} · ${v.product}`,
-          attackClass,
-          dateAdded: v.dateAdded,
-          ransomwareUse: v.ransomwareUse,
-          mws: calculateMWS({ ...v, attackClass, cvss: v.cvss || 8 }),
-        };
-      }).sort((a, b) => b.mws.score - a.mws.score);
-
-      setCves(enriched);
+      // Server-side endpoint returns pre-scored, pre-sorted CISA KEV data
+      const data = await fetchIntelligence();
+      const cvesWithAsset = (data.scored || []).map(c => ({
+        ...c,
+        asset: `${c.vendor} · ${c.product}`,
+      }));
+      setCves(cvesWithAsset);
       setMode('results');
     } catch (err) {
       console.error('Demo load failed', err);
-      setDemoError('Could not load live KEV data. Check your network connection.');
+      setDemoError('Could not load live KEV data right now. Please try again in a moment.');
     } finally {
       setLoadingDemo(false);
     }
