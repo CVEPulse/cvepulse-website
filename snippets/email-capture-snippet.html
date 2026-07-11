@@ -1,0 +1,34 @@
+<!-- ============================================================
+  CVEPulse — Email capture block ("The Exposure Brief")
+  PASTE THIS just before the closing </body> tag (or above the
+  footer) on each free dashboard page:
+    - cve-intelligence.html
+    - cvetrends.html
+    - dashboard.html  (KEV)
+    - threat-dashboard.html
+  Fully self-contained: scoped styles, no dependencies.
+  TODO: replace YOUR_FORM_ID with your Formspree form ID
+  (same account as your contact form).
+============================================================ -->
+<div style="max-width:720px;margin:56px auto 40px;padding:0 24px;">
+  <div style="background:linear-gradient(180deg,#16213b,#1e293b);border:1px solid #334155;border-radius:14px;padding:32px;text-align:center;font-family:'DM Sans',sans-serif;">
+    <div style="font-size:20px;font-weight:700;color:#e2e8f0;">Don't just watch this dashboard — get told when it matters</div>
+    <p style="color:#94a3b8;font-size:14px;margin:10px auto 20px;max-width:480px;line-height:1.6;">
+      The Exposure Brief: one short email when a new KEV entry meets the highest-risk
+      BOD 26-04 profile, with what to do inside your patch window. No weekly filler.
+    </p>
+    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST"
+          style="display:flex;gap:10px;max-width:440px;margin:0 auto;flex-wrap:wrap;justify-content:center;">
+      <input type="email" name="email" placeholder="work email" required aria-label="Work email"
+             style="flex:1;min-width:220px;padding:12px 14px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-family:'DM Sans',sans-serif;font-size:14px;">
+      <input type="hidden" name="source" value="dashboard-capture">
+      <button type="submit"
+              style="padding:12px 22px;border-radius:8px;border:none;background:#22d3ee;color:#0f172a;font-weight:600;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        Get the brief
+      </button>
+    </form>
+    <div style="font-size:11px;color:#64748b;margin-top:12px;font-family:monospace;">
+      Unsubscribe anytime. Your address is never shared.
+    </div>
+  </div>
+</div>

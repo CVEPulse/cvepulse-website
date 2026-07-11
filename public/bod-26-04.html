@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOD 26-04 Readiness — Patch Prioritization Gap Assessment | CVEPulse</title>
+  <meta name="description" content="CISA BOD 26-04 replaced flat CVSS patching with a four-variable risk model. Get a practitioner-led gap assessment of your vulnerability prioritization — built by working VM practitioners, not a sales team.">
+  <link rel="canonical" href="https://www.cvepulse.com/bod-26-04.html">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Is your patching program ready for BOD 26-04?">
+  <meta property="og:description" content="The 14-day KEV deadline era is over. Four variables now decide your patch deadlines. Find your gaps in one scoped assessment.">
+  <meta property="og:url" content="https://www.cvepulse.com/bod-26-04.html">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f172a; --card:#1e293b; --card2:#16213b; --line:#334155;
+      --text:#e2e8f0; --muted:#94a3b8; --accent:#22d3ee;
+      --red:#f43f5e; --amber:#fbbf24; --green:#34d399;
+      --mono:'IBM Plex Mono',monospace; --sans:'DM Sans',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6}
+    a{color:var(--accent);text-decoration:none}
+    a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+    .header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(15,23,42,.92);backdrop-filter:blur(8px);z-index:50}
+    .header-inner{max-width:1080px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700;font-size:18px}
+    .logo-icon{font-size:20px}
+    .nav{display:flex;gap:24px;font-size:14px}
+    .nav a{color:var(--muted)}
+    .nav a:hover,.nav a.active{color:var(--accent)}
+    @media(max-width:640px){.nav{display:none}}
+
+    .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+    .narrow{max-width:760px;margin:0 auto;padding:0 24px}
+
+    /* Hero */
+    .hero{padding:88px 0 56px;text-align:left;border-bottom:1px solid var(--line)}
+    .eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+    .eyebrow::before{content:"";width:28px;height:1px;background:var(--accent);display:inline-block}
+    h1{font-size:clamp(32px,5vw,52px);line-height:1.12;font-weight:700;max-width:820px}
+    h1 .strike{position:relative;color:var(--muted);white-space:nowrap}
+    h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:52%;height:3px;background:var(--red);transform:rotate(-2deg)}
+    .hero p.lede{margin-top:24px;font-size:19px;color:var(--muted);max-width:680px}
+    .hero-ctas{margin-top:36px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+    .btn{display:inline-block;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;border:none;cursor:pointer;font-family:var(--sans)}
+    .btn-primary{background:var(--accent);color:#0f172a}
+    .btn-primary:hover{background:#67e8f9}
+    .btn-ghost{border:1px solid var(--line);color:var(--text);background:transparent}
+    .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+    .hero-note{font-size:13px;color:var(--muted);font-family:var(--mono)}
+
+    /* Stats strip */
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:56px 0}
+    .stat{background:var(--card2);padding:28px 24px}
+    .stat .n{font-family:var(--mono);font-size:34px;font-weight:600;color:var(--accent)}
+    .stat .n.bad{color:var(--red)}
+    .stat .l{font-size:14px;color:var(--muted);margin-top:6px}
+    .stat .s{font-size:12px;color:#64748b;margin-top:10px;font-family:var(--mono)}
+    @media(max-width:720px){.stats{grid-template-columns:1fr}}
+
+    /* Section headers */
+    section{padding:64px 0}
+    .sec-head{margin-bottom:36px}
+    .sec-head h2{font-size:clamp(24px,3.4vw,34px);font-weight:700}
+    .sec-head p{color:var(--muted);margin-top:10px;max-width:640px;font-size:16px}
+
+    /* Matrix widget */
+    .matrix{border:1px solid var(--line);border-radius:14px;background:var(--card2);overflow:hidden}
+    .matrix-head{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+    .matrix-head .t{font-weight:700;font-size:17px}
+    .matrix-head .cve{font-family:var(--mono);font-size:13px;color:var(--muted)}
+    .toggles{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+    @media(max-width:720px){.toggles{grid-template-columns:repeat(2,1fr)}}
+    .tog{padding:24px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);cursor:pointer;background:transparent;text-align:left;font-family:var(--sans);color:var(--text);transition:background .15s}
+    .tog:last-child{border-right:none}
+    @media(max-width:720px){.tog:nth-child(2n){border-right:none}}
+    .tog:hover{background:rgba(34,211,238,.05)}
+    .tog .q{font-size:14px;font-weight:600;line-height:1.35}
+    .tog .state{margin-top:14px;font-family:var(--mono);font-size:13px;padding:4px 12px;border-radius:99px;display:inline-block;border:1px solid var(--line);color:var(--muted)}
+    .tog[aria-pressed="true"] .state{border-color:var(--red);color:var(--red);background:rgba(244,63,94,.08)}
+    .tog[aria-pressed="true"] .state::before{content:"YES — "}
+    .tog[aria-pressed="false"] .state::before{content:"NO — "}
+    .verdict{padding:32px 28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+    .verdict .deadline{font-family:var(--mono);font-size:clamp(26px,4vw,40px);font-weight:600;min-width:240px}
+    .verdict .deadline.t0{color:var(--red)}
+    .verdict .deadline.t1{color:var(--amber)}
+    .verdict .deadline.t2{color:var(--accent)}
+    .verdict .deadline.t3{color:var(--green)}
+    .verdict .why{color:var(--muted);font-size:14px;max-width:420px}
+    .matrix-foot{padding:14px 28px;border-top:1px solid var(--line);font-size:12px;color:#64748b;font-family:var(--mono)}
+
+    /* Offer */
+    .offer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+    @media(max-width:820px){.offer-grid{grid-template-columns:1fr}}
+    .offer-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px}
+    .offer-card .k{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+    .offer-card h3{font-size:18px;margin:12px 0 10px}
+    .offer-card p{font-size:14px;color:var(--muted)}
+    .offer-cta{margin-top:40px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:36px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+    .offer-cta .big{font-size:22px;font-weight:700;max-width:520px}
+    .offer-cta .sub{color:var(--muted);font-size:14px;margin-top:8px}
+
+    /* Credibility */
+    .cred{border-left:3px solid var(--accent);padding:8px 0 8px 28px}
+    .cred p{color:var(--muted);font-size:16px;max-width:720px}
+    .cred p strong{color:var(--text)}
+    .cred .tools{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+    .cred .tools span{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:5px 12px;color:var(--muted)}
+
+    /* Email capture */
+    .capture{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:14px;padding:40px;text-align:center}
+    .capture h2{font-size:24px}
+    .capture p{color:var(--muted);margin:12px auto 24px;max-width:520px;font-size:15px}
+    .capture form{display:flex;gap:12px;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+    .capture input[type=email]{flex:1;min-width:240px;padding:13px 16px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px}
+    .capture input[type=email]::placeholder{color:#64748b}
+    .capture .fine{font-size:12px;color:#64748b;margin-top:14px;font-family:var(--mono)}
+
+    footer{border-top:1px solid var(--line);padding:32px 0;margin-top:32px}
+    .foot-inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+    .foot-inner a{color:var(--muted)}
+    .foot-inner a:hover{color:var(--accent)}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo"><span class="logo-icon">🛡️</span><span>CVEPulse</span></a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/cve-intelligence.html">CVE Intelligence</a>
+        <a href="/dashboard.html">KEV Dashboard</a>
+        <a href="/bod-26-04.html" class="active">BOD 26-04</a>
+        <a href="/services.html">Services</a>
+        <a href="/contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">CISA Binding Operational Directive 26-04 · Issued June 10, 2026</div>
+      <h1>The <span class="strike">14-day KEV deadline</span> era is over. Four variables now decide when you patch.</h1>
+      <p class="lede">BOD 26-04 replaced flat, CVSS-driven patching with a graduated risk model: exposure, known exploitation, exploit automatability, and technical impact. The highest-risk combination means <strong style="color:var(--text)">3 calendar days with mandatory forensic triage</strong> — while most of your backlog can be safely deferred. If your SOP still says "Critical = 14 days," you're now prioritizing by a retired standard.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#assessment">Get a prioritization gap assessment</a>
+        <a class="btn btn-ghost" href="#matrix">Try the four-variable model ↓</a>
+      </div>
+      <p class="hero-note" style="margin-top:18px">Federal mandate for agencies · de facto standard for everyone else, exactly as the KEV catalog was</p>
+    </section>
+
+    <div class="stats" role="list">
+      <div class="stat" role="listitem">
+        <div class="n bad">26%</div>
+        <div class="l">of KEV-catalog vulnerabilities were fully remediated by organizations in 2025 — down from 38% the year before</div>
+        <div class="s">Verizon 2026 DBIR</div>
+      </div>
+      <div class="stat" role="listitem">
+        <div class="n bad">29 min</div>
+        <div class="l">average eCrime breakout time, down from 48 minutes a year earlier — fastest observed: 27 seconds</div>
+        <div class="s">CrowdStrike 2026 Global Threat Report</div>
+      </div>
+      <div class="stat" role="listitem">
+        <div class="n">&lt;1%</div>
+        <div class="l">of a typical vulnerability backlog needs urgent remediation under the new model — over 60% can be deferred</div>
+        <div class="s">CISA pilot data, BOD 26-04</div>
+      </div>
+    </div>
+
+    <section id="matrix">
+      <div class="sec-head">
+        <h2>Score a vulnerability the way CISA now does</h2>
+        <p>Toggle the four risk variables. Watch the deadline change. This is the logic your prioritization now needs to speak — no CVSS score required.</p>
+      </div>
+      <div class="matrix">
+        <div class="matrix-head">
+          <span class="t">Four-variable risk model</span>
+          <span class="cve">per vulnerability · per asset</span>
+        </div>
+        <div class="toggles">
+          <button class="tog" id="v-exposed" aria-pressed="true" onclick="flip(this)">
+            <div class="q">Publicly exposed?</div>
+            <div class="state">reachable from internet</div>
+          </button>
+          <button class="tog" id="v-kev" aria-pressed="true" onclick="flip(this)">
+            <div class="q">In the KEV catalog?</div>
+            <div class="state">exploited in the wild</div>
+          </button>
+          <button class="tog" id="v-auto" aria-pressed="true" onclick="flip(this)">
+            <div class="q">Automatable by adversary?</div>
+            <div class="state">full chain, no human</div>
+          </button>
+          <button class="tog" id="v-impact" aria-pressed="true" onclick="flip(this)">
+            <div class="q">Total system control?</div>
+            <div class="state">post-exploit impact</div>
+          </button>
+        </div>
+        <div class="verdict">
+          <div class="deadline t0" id="deadline">3 calendar days</div>
+          <div class="why" id="why">All four variables present. Remediate within 3 days and perform forensic triage — assume you may already be compromised.</div>
+        </div>
+        <div class="matrix-foot">Illustrative tiers. Exact 16-combination timelines: CISA BOD 26-04, "Prioritizing Security Updates Based on Risk."</div>
+      </div>
+    </section>
+
+    <section id="assessment">
+      <div class="sec-head">
+        <h2>The Patch Prioritization Gap Assessment</h2>
+        <p>One scoped engagement. Your current prioritization model, mapped against the BOD 26-04 four-variable framework — with a concrete remediation-tier design you can put in front of your CISO.</p>
+      </div>
+      <div class="offer-grid">
+        <div class="offer-card">
+          <div class="k">01 · Diagnose</div>
+          <h3>Where your model breaks</h3>
+          <p>We review your current SLA tiers, scanner outputs (Qualys, Tenable, Rapid7 or equivalent), and exception process against the four variables. You get a gap register: what your program can already answer, and what it can't — usually the "automatable" and "publicly exposed per-asset" questions.</p>
+        </div>
+        <div class="offer-card">
+          <div class="k">02 · Design</div>
+          <h3>Your graduated tier model</h3>
+          <p>A remediation-tier matrix adapted to your estate — including how to source each variable from tooling you already own (KEV feeds, EPSS, EASM exposure data, CTI automatability signals) instead of buying a new platform.</p>
+        </div>
+        <div class="offer-card">
+          <div class="k">03 · Defend</div>
+          <h3>The executive story</h3>
+          <p>A short leadership briefing pack: why the flat model is retired, what changes for system owners, and the honest efficiency case — most backlogs shrink to a small urgent core once risk-tiered, and that's a message leadership wants to hear.</p>
+        </div>
+      </div>
+      <div class="offer-cta">
+        <div>
+          <div class="big">Start with a free 20-minute scoping call.</div>
+          <div class="sub">No deck, no pitch — bring your current SLA table and one month of scan data if you want a live read.</div>
+        </div>
+        <!-- TODO: replace # with your Calendly link -->
+        <a class="btn btn-primary" href="#" id="calendly-link">Book the call</a>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Built by practitioners, not a sales team</h2></div>
+      <div class="cred">
+        <p><strong>CVEPulse is run by senior vulnerability management practitioners with hands-on enterprise experience in regulated industries.</strong> The frameworks in this assessment aren't theory — they come from operating real, large-scale VM programs: composite risk scoring with KEV, EPSS, exposure and asset criticality, SLA governance, and executive reporting under strict compliance and audit requirements.</p>
+        <p style="margin-top:14px">That means the advice accounts for the parts vendors skip: validated systems you can't blindly auto-patch, change advisory boards, evidence trails for auditors, and system owners who don't report to you.</p>
+        <div class="tools">
+          <span>Enterprise VM &amp; EASM</span><span>Risk-based prioritization</span><span>KEV · EPSS · Exposure</span><span>Patch governance &amp; SLAs</span><span>Regulated environments</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="capture">
+        <h2>The Exposure Brief</h2>
+        <p>One short email when it matters: new KEV entries that meet the highest-risk BOD 26-04 profile, and what to do inside your patch window. No noise, no weekly filler.</p>
+        <!-- TODO: replace YOUR_FORM_ID with your Formspree form ID -->
+        <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+          <input type="email" name="email" placeholder="work email" required aria-label="Work email">
+          <button class="btn btn-primary" type="submit">Get the brief</button>
+        </form>
+        <div class="fine">Unsubscribe anytime. Your address is never shared.</div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="foot-inner">
+      <span>© 2026 CVEPulse. Real-time CVE intelligence and practitioner-led vulnerability consulting.</span>
+      <span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/contact.html">Contact</a></span>
+    </div>
+  </footer>
+
+  <script>
+    function flip(btn){
+      btn.setAttribute('aria-pressed', btn.getAttribute('aria-pressed')==='true' ? 'false' : 'true');
+      render();
+    }
+    function on(id){return document.getElementById(id).getAttribute('aria-pressed')==='true';}
+    function render(){
+      var exposed=on('v-exposed'), kev=on('v-kev'), auto=on('v-auto'), impact=on('v-impact');
+      var count=[exposed,kev,auto,impact].filter(Boolean).length;
+      var d=document.getElementById('deadline'), w=document.getElementById('why');
+      d.className='deadline';
+      if(exposed&&kev&&auto&&impact){
+        d.textContent='3 calendar days'; d.classList.add('t0');
+        w.textContent='All four variables present. Remediate within 3 days and perform forensic triage — assume you may already be compromised.';
+      } else if(kev&&(exposed||auto||impact)){
+        d.textContent='Days, not weeks'; d.classList.add('t1');
+        w.textContent='Confirmed real-world exploitation plus at least one aggravating factor. This sits in the directive\u2019s elevated tiers — an accelerated deadline well inside the old 14-day norm.';
+      } else if(count>=2){
+        d.textContent='Standard cycle'; d.classList.add('t2');
+        w.textContent='Meaningful risk, but no confirmed exploitation pattern demanding emergency response. Remediate through your normal, scheduled patch cadence.';
+      } else {
+        d.textContent='Defer to next upgrade'; d.classList.add('t3');
+        w.textContent='Low-risk profile. Under the graduated model this can wait for the next system upgrade cycle — this is the efficiency the directive buys you.';
+      }
+    }
+    render();
+  </script>
+</body>
+</html>
